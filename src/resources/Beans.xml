@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+    <bean id="basemap" class="maps.BaseMap">
+    </bean>
+    <bean id="poilayersdata" class="data.PoiLayersData">
+        <constructor-arg name="baseMap">
+            <ref bean="basemap"/>
+        </constructor-arg>
+    </bean>
+    <bean id="mapview" class="controller.MapViewController">
+        <constructor-arg name="baseMap">
+            <ref bean="basemap"/>
+        </constructor-arg>
+        <constructor-arg name="poiLayersData">
+            <ref bean="poilayersdata"/>
+        </constructor-arg>
+    </bean>
+    <bean id="logic" class="controller.AppLogicController">
+        <constructor-arg name="baseMap">
+            <ref bean="basemap"/>
+        </constructor-arg>
+    </bean>
+    <bean id="client" class="network.NetworkClient">
+        <constructor-arg name="applicationLogic">
+            <ref bean="logic"/>
+        </constructor-arg>
+    </bean>
+</beans>

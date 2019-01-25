@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.effect.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="400.0" minWidth="800.0" prefHeight="700.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.JfxGuiController">
+   <top>
+      <GridPane hgap="5.0" maxHeight="150.0" maxWidth="1.7976931348623157E308" prefHeight="150.0" vgap="5.0" BorderPane.alignment="CENTER">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" maxWidth="840.0" minWidth="10.0" prefWidth="748.0" />
+          <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1139.0" minWidth="10.0" prefWidth="747.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding>
+         <children>
+            <Button fx:id="btnTarget" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickTarget" text="TARG" textFill="RED" GridPane.columnIndex="1">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnConnect" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickConnect" text="CONN" textFill="#06ccda" GridPane.columnIndex="16">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnPrev" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickPrev" text="&lt;&lt;" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnLaser" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickNotch" text="LASER" textFill="#ff078b" GridPane.columnIndex="16" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <ToggleButton fx:id="btnMissed" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickMissed" text="MISS" textFill="#bcc400" GridPane.columnIndex="0">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </ToggleButton>
+            <Button fx:id="btnDestroyed" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickDestroyed" text="DESTR" textFill="#03d04b" GridPane.columnIndex="2">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnMyposition" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickMyposition" text="MYPOS" textFill="#ac0cd0" GridPane.columnIndex="5">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnGun" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickGun" text="GUN" textFill="#ff8d0b" GridPane.columnIndex="4">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnTriangul" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickTriangul" text="TRNG" GridPane.columnIndex="5" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnFwd" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickFwd" text="&gt;&gt;" GridPane.columnIndex="2" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnDelete" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickDelete" text="DEL" GridPane.columnIndex="1" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnMark" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickMark" text="MARK" textFill="#0429ff" GridPane.columnIndex="4" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="3">
+               <children>
+                  <TextField fx:id="txtLon" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="45.0" prefWidth="71.0" promptText="Longitude" />
+                  <TextField fx:id="txtLat" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="45.0" prefWidth="71.0" promptText="Latitude" />
+               </children>
+            </VBox>
+            <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="3" GridPane.rowIndex="1">
+               <children>
+                  <TextField fx:id="txtDir" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="45.0" prefWidth="71.0" promptText="Direction" />
+                  <TextField fx:id="txtDist" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="45.0" prefWidth="71.0" promptText="Distance" />
+               </children>
+            </VBox>
+            <TextArea fx:id="txtInfo" prefHeight="68.0" prefWidth="38.0" promptText="Info" GridPane.columnIndex="6" GridPane.columnSpan="2" />
+            <Button fx:id="btnZoomOut" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickZoomOut" text="-" GridPane.columnIndex="6" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="33.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnZoomIn" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickZoomIn" text="+" GridPane.columnIndex="7" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="29.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnArrow" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickArrow" text="&lt;---" GridPane.columnIndex="8" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="20.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnLine" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLine" text="===" GridPane.columnIndex="9" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="19.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnRound" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickRound" text="O" GridPane.columnIndex="10" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="27.0" />
+               </font>
+            </Button>
+            <ToggleButton fx:id="btnDownload" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickDownload" text="LOAD" textFill="#2baaff" GridPane.columnIndex="14">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </ToggleButton>
+         </children>
+      </GridPane>
+   </top>
+   <center>
+      <BorderPane fx:id="pane" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+   </center>
+</BorderPane>
