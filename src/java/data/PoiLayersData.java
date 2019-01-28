@@ -1,8 +1,10 @@
 package data;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Pair;
+import maps.ArrowsLinesLayer;
 import maps.BaseMap;
 import maps.MapLayer;
 import maps.PoiLayer;
@@ -13,9 +15,12 @@ import java.util.List;
 
 public class PoiLayersData {
     private PoiLayer targetPointsLayer, triangPointsLayer, missedPointsLayer, tempPointLayer, myPosPointLayer;
+    private ArrowsLinesLayer linesLayer;
     private final List<MapLayer> layers = new LinkedList<>();
     private Pair<MapPoint, Node> focusedPair = new Pair<>(null, null);
+    private Line focusedLine = new Line();
     private ArrayList<MapPoint> downloadCornerPoints = new ArrayList<>(2);
+    private ArrayList<MapPoint> lineStartEndPoints = new ArrayList<>(2);
     public Rectangle rectangle = new Rectangle();
 
     public PoiLayersData(BaseMap baseMap) {
@@ -24,16 +29,19 @@ public class PoiLayersData {
         missedPointsLayer = new PoiLayer();
         tempPointLayer = new PoiLayer();
         myPosPointLayer = new PoiLayer();
+        linesLayer = new ArrowsLinesLayer();
         targetPointsLayer.setBaseMap(baseMap);
         triangPointsLayer.setBaseMap(baseMap);
         missedPointsLayer.setBaseMap(baseMap);
         tempPointLayer.setBaseMap(baseMap);
         myPosPointLayer.setBaseMap(baseMap);
+        linesLayer.setBaseMap(baseMap);
         layers.add(targetPointsLayer);
         layers.add(triangPointsLayer);
         layers.add(missedPointsLayer);
         layers.add(tempPointLayer);
         layers.add(myPosPointLayer);
+        layers.add(linesLayer);
         rectangle.setFill(null); // transparent
         rectangle.setStroke(Color.BLACK); // border
         rectangle.getStrokeDashArray().add(5.0);
@@ -59,6 +67,10 @@ public class PoiLayersData {
         return myPosPointLayer;
     }
 
+    public ArrowsLinesLayer getLinesLayer() {
+        return linesLayer;
+    }
+
     public List<MapLayer> getLayers() {
         return layers;
     }
@@ -73,5 +85,21 @@ public class PoiLayersData {
 
     public ArrayList<MapPoint> getDownloadCornerPoints() {
         return downloadCornerPoints;
+    }
+
+    public ArrayList<MapPoint> getLineStartEndPoints() {
+        return lineStartEndPoints;
+    }
+
+    public void setLineStartEndPoints(ArrayList<MapPoint> lineStartEndPoints) {
+        this.lineStartEndPoints = lineStartEndPoints;
+    }
+
+    public Line getFocusedLine() {
+        return focusedLine;
+    }
+
+    public void setFocusedLine(Line focusedLine) {
+        this.focusedLine = focusedLine;
     }
 }

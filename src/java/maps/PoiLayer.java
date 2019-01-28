@@ -5,6 +5,7 @@ import javafx.scene.Node;
 import javafx.util.Pair;
 
 import java.util.LinkedList;
+import java.util.Optional;
 
 /**
  * A layer that allows to visualise points of interest.
@@ -21,11 +22,12 @@ public class PoiLayer extends MapLayer {
         this.markDirty();
     }
 
-    //  Method used only in temprorary layer with one point
+    //  Method used only in temporary layer with one point
     public void deleteTempPoint() {
         //selects only exactly tempPoint from all Nodes in Region
         try {
-            this.getChildren().stream().filter(node -> node == points.get(0).getValue()).forEach(node -> node.setVisible(false));
+            Optional<Node> op = this.getChildren().stream().filter(node -> node == points.get(0).getValue()).findFirst();
+            op.ifPresent(node -> node.setVisible(false));
             points.clear();
             markDirty();
         } catch (NullPointerException e) {
@@ -39,7 +41,6 @@ public class PoiLayer extends MapLayer {
             MapPoint point = candidate.getKey();
             Node icon = candidate.getValue();
             Point2D mapPoint = baseMap.getMapPointFromDegreesToXY(point.getLatitude(), point.getLongitude());
-//            System.out.println(mapPoint.getX() + " " + mapPoint.getY());
             icon.setVisible(true);
 //            Задает смещение иконки точки
             icon.setTranslateX(mapPoint.getX());

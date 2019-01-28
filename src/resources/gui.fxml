@@ -125,22 +125,12 @@
                   <Font name="System Bold" size="29.0" />
                </font>
             </Button>
-            <Button fx:id="btnArrow" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickArrow" text="&lt;---" GridPane.columnIndex="8" GridPane.rowIndex="1">
+            <ToggleButton fx:id="btnLine" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLine" text="LINE" GridPane.columnIndex="8" GridPane.rowIndex="1">
                <font>
-                  <Font name="System Bold" size="20.0" />
+                  <Font name="System Bold" size="14.0" />
                </font>
-            </Button>
-            <Button fx:id="btnLine" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLine" text="===" GridPane.columnIndex="9" GridPane.rowIndex="1">
-               <font>
-                  <Font name="System Bold" size="19.0" />
-               </font>
-            </Button>
-            <Button fx:id="btnRound" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickRound" text="O" GridPane.columnIndex="10" GridPane.rowIndex="1">
-               <font>
-                  <Font name="System Bold" size="27.0" />
-               </font>
-            </Button>
-            <ToggleButton fx:id="btnDownload" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickDownload" text="LOAD" textFill="#2baaff" GridPane.columnIndex="14">
+            </ToggleButton>
+            <ToggleButton fx:id="btnDownload" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickDownload" text="LOAD" textFill="#2baaff" GridPane.columnIndex="8">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>

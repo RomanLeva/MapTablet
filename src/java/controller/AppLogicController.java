@@ -73,6 +73,7 @@ public class AppLogicController {
     }
 
     void selectToDownload() {
+        if (poiLayersData.getDownloadCornerPoints().size() == 0) return;
         MapPoint firstCornerPoint = poiLayersData.getDownloadCornerPoints().get(0);
         MapPoint secondCornerPoint = poiLayersData.getDownloadCornerPoints().get(1);
         try {
@@ -96,6 +97,7 @@ public class AppLogicController {
     public void displayMessage(String msg, boolean clearBefore) {
         if (clearBefore) {
             guiController.txtInfo.clear();
+            guiController.txtInfo.setText(msg);
         } else {
             guiController.txtInfo.setText(guiController.txtInfo.getText() + "\n" + msg);
             guiController.txtInfo.selectPositionCaret(guiController.txtInfo.getLength());

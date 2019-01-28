@@ -1,6 +1,5 @@
 package maps;
 import javafx.scene.Parent;
-import javafx.scene.layout.Region;
 
 /**
  * A maps.MapLayer can be added on top a maps.BaseMap (which provides the map tiles).
@@ -48,7 +47,7 @@ public class MapLayer extends Parent {
      * has changed. It will set the <code>dirty</code> flag, and it will
      * request the layer to be reconsidered during the next pulse.
      */
-    protected void markDirty() {
+    public void markDirty() {
         this.dirty = true;
         this.requestLayout();
     }

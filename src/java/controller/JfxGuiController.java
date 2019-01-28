@@ -1,12 +1,14 @@
 package controller;
 import data.MapPoint;
 import data.PoiLayersData;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
@@ -41,16 +43,16 @@ public class JfxGuiController {
     public TextArea txtInfo;
     public BorderPane borderPane;
     public BorderPane pane;
-    public Button btnArrow;
-    public Button btnLine;
-    public Button btnRound;
+    public ToggleButton btnLine;
     private MapViewController mapViewController; // default controller for onMap actions
     private AppLogicController appLogicController; // controller of entire app logic and decisions
     private PoiLayersData poiLayersData;
     private int targetMaxIndex, targetNextIndex = 0;
     boolean readyFire = false;
+    private boolean somethingPressed = false;
 
     public void clickTarget() {
+        if (somethingPressed) return;
         if (!mapViewController.isPointSelected()) {
             if (readyFire) {
                 ((MapPoint) poiLayersData.getFocusedPair().getKey()).setCommand(MapPoint.Commands.FIRE);
@@ -76,10 +78,10 @@ public class JfxGuiController {
     }
 
     public void clickDestroyed() {
+        if (somethingPressed) return;
         if (mapViewController.isSelectingMissed()) {
             mapViewController.setSelectingMissed(false);
             btnMissed.setSelected(false);
-            setDisabledButtons(false);
             poiLayersData.getMissedPointsLayer().getPoints().forEach(pair -> {
                 ((Shape) pair.getValue()).setFill(Color.TRANSPARENT);
                 pair.getValue().setVisible(false);
@@ -92,6 +94,7 @@ public class JfxGuiController {
     }
 
     public void clickDelete() {
+        if (somethingPressed) return;
         Pair p = poiLayersData.getFocusedPair();
         for (MapLayer poiLayer : poiLayersData.getLayers()) {
             Optional op = ((PoiLayer) poiLayer).getPoints().stream().filter(mapPointNodePair -> mapPointNodePair == p).findFirst();
@@ -117,11 +120,11 @@ public class JfxGuiController {
             if (!mapViewController.isSelectingMissed()) {
                 mapViewController.setSelectingMissed(true);
                 btnMissed.setSelected(true);
-                setDisabledButtons(true);
+                somethingPressed = true;
             } else {
-                setDisabledButtons(false);
                 mapViewController.setSelectingMissed(false);
                 btnMissed.setSelected(false);
+                somethingPressed = false;
                 appLogicController.calculateAndPushAdjustments();
                 poiLayersData.getMissedPointsLayer().getPoints().forEach(pair -> {
                     ((Shape) pair.getValue()).setFill(Color.TRANSPARENT);
@@ -136,6 +139,7 @@ public class JfxGuiController {
     }
 
     public void clickFwd() {
+        if (somethingPressed) return;
         mapViewController.setPointSelected(true);
         LinkedList<Pair<MapPoint, Node>> l = poiLayersData.getTargetPointsLayer().getPoints();
         if (l.isEmpty()) return;
@@ -154,6 +158,7 @@ public class JfxGuiController {
     }
 
     public void clickPrev() {
+        if (somethingPressed) return;
         mapViewController.setPointSelected(true);
         LinkedList<Pair<MapPoint, Node>> l = poiLayersData.getTargetPointsLayer().getPoints();
         if (l.isEmpty()) return;
@@ -172,6 +177,7 @@ public class JfxGuiController {
     }
 
     public void clickMyposition() {
+        if (somethingPressed) return;
         if (!mapViewController.isPointSelected()) {
             MapPoint t = poiLayersData.getTempPointLayer().getPoints().get(0).getKey();
             if (!poiLayersData.getMyPosPointLayer().getPoints().isEmpty()) {
@@ -184,6 +190,7 @@ public class JfxGuiController {
     }
 
     public void clickTriangul() {
+        if (somethingPressed) return;
         if (!mapViewController.isPointSelected()) {
             if (poiLayersData.getTempPointLayer().getPoints().isEmpty()) return;
             MapPoint t = poiLayersData.getTempPointLayer().getPoints().get(0).getKey();
@@ -204,9 +211,9 @@ public class JfxGuiController {
         if (!mapViewController.isSelectingDownload() & !mapViewController.isSelectingMissed()) {
             mapViewController.setSelectingDownload(true);
             btnDownload.setSelected(true);
-            setDisabledButtons(true);
+            somethingPressed = true;
         } else {
-            setDisabledButtons(false);
+            somethingPressed = false;
             mapViewController.setSelectingDownload(false);
             btnDownload.setSelected(false);
             poiLayersData.rectangle.setWidth(0);
@@ -215,25 +222,59 @@ public class JfxGuiController {
         }
     }
 
-    private void setDisabledButtons(boolean disable) {
-        if (mapViewController.isSelectingMissed()) {
-            btnTarget.setDisable(disable);
-            btnPrev.setDisable(disable);
-            btnFwd.setDisable(disable);
-            btnTriangul.setDisable(disable);
-            btnMyposition.setDisable(disable);
-            btnDelete.setDisable(disable);
-            btnDownload.setDisable(disable);
+    public void clickConnect() {
+        appLogicController.createConnection();
+    }
+
+    public void clickNotch(ActionEvent actionEvent) {
+        if (somethingPressed) return;
+    }
+
+    public void clickGun(ActionEvent actionEvent) {
+        if (somethingPressed) return;
+    }
+
+    public void clickMark(ActionEvent actionEvent) {
+        if (somethingPressed) return;
+    }
+
+    public void clickZoomOut() {
+        poiLayersData.getDownloadCornerPoints().clear();
+        poiLayersData.rectangle.setWidth(0);
+        poiLayersData.rectangle.setHeight(0);
+        mapViewController.getBaseMap().zoom(-1, mapViewController.getWidth() / 2, mapViewController.getHeight() / 2);
+        poiLayersData.getLayers().forEach(MapLayer::markDirty);
+    }
+
+    public void clickZoomIn() {
+        poiLayersData.getDownloadCornerPoints().clear();
+        poiLayersData.rectangle.setWidth(0);
+        poiLayersData.rectangle.setHeight(0);
+        mapViewController.getBaseMap().zoom(1, mapViewController.getWidth() / 2, mapViewController.getHeight() / 2);
+        poiLayersData.getLayers().forEach(MapLayer::markDirty);
+    }
+
+    public void clickLine() {
+        if (!mapViewController.isSelectingLine()) {
+            appLogicController.displayMessage("Select two line points,\n than push LINE button.", true);
+            if (poiLayersData.getTempPointLayer().getPoints().size() != 0)
+                poiLayersData.getTempPointLayer().deleteTempPoint();
+            btnLine.setSelected(true);
+            somethingPressed = true;
+            mapViewController.setSelectingLine(true);
         } else {
-            btnTarget.setDisable(disable);
-            btnDestroyed.setDisable(disable);
-            btnMissed.setDisable(disable);
-            btnPrev.setDisable(disable);
-            btnFwd.setDisable(disable);
-            btnTriangul.setDisable(disable);
-            btnMyposition.setDisable(disable);
-            btnDelete.setDisable(disable);
-            btnConnect.setDisable(disable);
+            btnLine.setSelected(false);
+            somethingPressed = false;
+            mapViewController.setSelectingLine(false);
+            if (poiLayersData.getTempPointLayer().getPoints().size() != 0)
+                poiLayersData.getTempPointLayer().deleteTempPoint();
+            try {
+                poiLayersData.getLinesLayer().addLine(poiLayersData.getLineStartEndPoints().get(0), poiLayersData.getLineStartEndPoints().get(1));
+                appLogicController.displayMessage("Line created.", true);
+            } catch (IndexOutOfBoundsException e) {
+                poiLayersData.getLineStartEndPoints().clear();
+                appLogicController.displayMessage("", true);
+            }
         }
     }
 
@@ -247,42 +288,5 @@ public class JfxGuiController {
 
     public void setAppLogicController(AppLogicController appLogicController) {
         this.appLogicController = appLogicController;
-    }
-
-    public void clickConnect() {
-        appLogicController.createConnection();
-    }
-
-    public void clickNotch(ActionEvent actionEvent) {
-    }
-
-    public void clickGun(ActionEvent actionEvent) {
-    }
-
-    public void clickMark(ActionEvent actionEvent) {
-    }
-
-    public void clickZoomOut() {
-        poiLayersData.getDownloadCornerPoints().clear();
-        poiLayersData.rectangle.setWidth(0);
-        poiLayersData.rectangle.setHeight(0);
-        mapViewController.setZoom(-1);
-//        baseMap.zoom(t.getDeltaY() > 1 ? 1 : -1, t.getX(), t.getY());
-    }
-
-    public void clickZoomIn() {
-        poiLayersData.getDownloadCornerPoints().clear();
-        poiLayersData.rectangle.setWidth(0);
-        poiLayersData.rectangle.setHeight(0);
-        mapViewController.setZoom(1);
-    }
-
-    public void clickArrow(ActionEvent actionEvent) {
-    }
-
-    public void clickLine(ActionEvent actionEvent) {
-    }
-
-    public void clickRound(ActionEvent actionEvent) {
     }
 }
