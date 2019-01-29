@@ -9,7 +9,7 @@ import javafx.util.Pair;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-public class ArrowsLinesLayer extends MapLayer {
+public class LinesLayer extends MapLayer {
     private LinkedList<Pair<Pair<MapPoint, MapPoint>, Node>> lines = new LinkedList<>();
 
     public void addLine(MapPoint start, MapPoint end) {

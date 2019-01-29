@@ -15,18 +15,15 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.*;
 import javafx.util.Duration;
 import javafx.util.Pair;
-import maps.ArrowsLinesLayer;
+import maps.LinesLayer;
 import maps.BaseMap;
 import maps.MapLayer;
-import maps.PoiLayer;
+import maps.PointsLayer;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Optional;
 import java.util.logging.Logger;
-
-import static data.MapPoint.Commands.FIRE;
-import static data.MapPoint.Commands.READY;
 
 /**
  * This is the top UI element of the map component. Useful only in JavaFX desktop applications.
@@ -249,8 +246,8 @@ public class MapViewController extends Region {
     private void selectPoint(MouseEvent t) {
         refreshSelection();
         for (MapLayer layer : poiLayersData.getLayers()) {
-            if (layer instanceof ArrowsLinesLayer) continue;
-            Optional<Pair<MapPoint, Node>> op = ((PoiLayer) layer).getPoints().stream().filter(pair -> pair.getValue() == t.getTarget()).findFirst();
+            if (layer instanceof LinesLayer) continue;
+            Optional<Pair<MapPoint, Node>> op = ((PointsLayer) layer).getPoints().stream().filter(pair -> pair.getValue() == t.getTarget()).findFirst();
             if (op.isPresent()) {
                 Pair<MapPoint, Node> pair = op.get();
                 focusedColor = ((Shape) pair.getValue()).getFill();

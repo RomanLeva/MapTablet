@@ -22,6 +22,10 @@
         <constructor-arg name="baseMap">
             <ref bean="basemap"/>
         </constructor-arg>
+        <constructor-arg name="poiLayersData">
+            <ref bean="poilayersdata"/>
+        </constructor-arg>
+        <property name="client" ref="client" />
     </bean>
     <bean id="client" class="network.NetworkClient">
         <constructor-arg name="applicationLogic">

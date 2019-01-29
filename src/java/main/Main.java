@@ -23,22 +23,18 @@ public class Main extends Application {
         try {
             ApplicationContext apc = new ClassPathXmlApplicationContext("/Beans.xml");
             MapViewController mapViewController = (MapViewController) apc.getBean("mapview");
-            NetworkClient client = (NetworkClient) apc.getBean("client");
+            mapViewController.setZoom(4);
             AppLogicController logic = (AppLogicController) apc.getBean("logic");
             PoiLayersData poiLayersData = (PoiLayersData) apc.getBean("poilayersdata");
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui.fxml"));
             Parent root = loader.load();
-            mapViewController.setZoom(4);
-
             JfxGuiController myJfxGuiController = loader.getController();
             myJfxGuiController.setMapViewController(mapViewController);
             myJfxGuiController.setAppLogicController(logic);
             myJfxGuiController.setPoiLayersData(poiLayersData);
             myJfxGuiController.borderPane.setCenter(mapViewController);
             mapViewController.setGuiController(myJfxGuiController);
-            logic.setClient(client);
             logic.setGuiController(myJfxGuiController);
-            logic.setPoiLayersData(poiLayersData);
             primaryStage.setTitle("Map Tablet");
             primaryStage.setScene(new Scene(root));
             primaryStage.setOnCloseRequest(event -> {
@@ -47,7 +43,7 @@ public class Main extends Application {
             });
             primaryStage.show();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warning(e.getMessage());
         }
     }
 

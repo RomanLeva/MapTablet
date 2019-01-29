@@ -19,8 +19,10 @@ public class AppLogicController {
     private Channel channel;
     private BaseMap baseMap;
 
-    public AppLogicController(BaseMap baseMap) {
+    public AppLogicController(BaseMap baseMap, PoiLayersData poiLayersData) {
         this.baseMap = baseMap;
+        this.client = client;
+        this.poiLayersData = poiLayersData;
     }
 
     void pushPointToHQ(MapPoint point) {

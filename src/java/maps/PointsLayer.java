@@ -10,7 +10,7 @@ import java.util.Optional;
 /**
  * A layer that allows to visualise points of interest.
  */
-public class PoiLayer extends MapLayer {
+public class PointsLayer extends MapLayer {
     private LinkedList<Pair<MapPoint, Node>> points = new LinkedList<>();
     private static Pair<MapPoint, Node> lastUsedPoint;
 
@@ -26,6 +26,7 @@ public class PoiLayer extends MapLayer {
     public void deleteTempPoint() {
         //selects only exactly tempPoint from all Nodes in Region
         try {
+            if (points.isEmpty()) return;
             Optional<Node> op = this.getChildren().stream().filter(node -> node == points.get(0).getValue()).findFirst();
             op.ifPresent(node -> node.setVisible(false));
             points.clear();
