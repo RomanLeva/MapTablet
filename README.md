@@ -5,4 +5,4 @@ A commander can simply pin a target point on the map, application will select th
 and so, for units there will apear a mark point and arrow. 
 JavaFX platform was choosed for offline working and connecting to some equipment by USB. Application uses auto cached or downloaded OpenStreetMap tiles. All messages are encrypted.
 <<<<Use it in pair with OSM-based-app from my repository, it uses localhost and port 8007. Push the SPOT button for connecting MapTablet to the working HeadQuarters application.>>>>
-Tile rendering by Gluonmaps open source project, all the other functionallity as points, loading tiles, calculations direction and coordinates, connection... developed by me.
+Tile rendering by Gluonmaps open source project, all the other functionallity developed by me.
