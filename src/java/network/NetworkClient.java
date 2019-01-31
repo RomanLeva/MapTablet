@@ -11,6 +11,7 @@ import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.util.ResourceLeakDetector;
+import javafx.application.Platform;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.SerializationUtils;
 
@@ -85,6 +86,11 @@ public class NetworkClient {
         }
     }
 
+    public void pushCommandPointToClient(MapPoint point, ChannelHandlerContext channelContext){
+        channelContext.writeAndFlush(point);
+        Platform.runLater(() -> applicationLogic.displayMessage("Pushing to server.", false));
+    }
+
     public Channel getChannel() {
         return channel;
     }
@@ -107,7 +113,7 @@ public class NetworkClient {
                 Gson gson = new Gson();
                 String jsonInString = (String) ois.readObject();
                 MapPoint point = gson.fromJson(jsonInString, MapPoint.class);
-                applicationLogic.processIncomingMessage(point);
+                applicationLogic.processIncomingMessage(point, ctx);
             } catch (IOException | ClassNotFoundException e) {
                 logger.warning(e.getMessage());
             } catch (IllegalBlockSizeException | BadPaddingException c) {

@@ -12,7 +12,7 @@ import java.util.LinkedList;
 public class LinesLayer extends MapLayer {
     private LinkedList<Pair<Pair<MapPoint, MapPoint>, Node>> lines = new LinkedList<>();
 
-    public void addLine(MapPoint start, MapPoint end) {
+    public void addLine(MapPoint start, MapPoint end, Color color) {
         Line line = new Line();
         line.setStrokeWidth(2);
         Point2D s = baseMap.getMapPointFromDegreesToXY(start.getLatitude(), start.getLongitude());
@@ -21,7 +21,7 @@ public class LinesLayer extends MapLayer {
         line.setStartY(s.getY());
         line.setEndX(e.getX());
         line.setEndY(e.getY());
-        line.setStroke(Color.ORANGERED);
+        line.setStroke(color);
         lines.addFirst(new Pair<>(new Pair<>(start, end), line));
         this.getChildren().add(line);
         this.markDirty();

@@ -6,6 +6,7 @@ import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
@@ -22,6 +23,7 @@ import maps.PointsLayer;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -260,6 +262,18 @@ public class MapViewController extends Region {
                         case FIRE:
                             jfxGuiController.btnTarget.setText("WORK");
                             break;
+                    }
+                } else if (focusedColor == Color.ORCHID) {
+                    List<Double> l = poiLayersData.getWeaponsAdjustmentsMap().get(pair.getKey());
+                    if (l != null) {
+                        if (!l.isEmpty()) {
+                            DecimalFormat df_dist = new DecimalFormat("###,###,###");
+                            DecimalFormat df_angle_dir = new DecimalFormat("#.###");
+                            Platform.runLater(() -> {
+                                jfxGuiController.txtDir.setText(df_angle_dir.format(l.get(0)) + "\u00b0");
+                                jfxGuiController.txtDist.setText(df_dist.format(l.get(1)) + " m");
+                            });
+                        }
                     }
                 }
                 if (focusedColor == Color.YELLOW) return;

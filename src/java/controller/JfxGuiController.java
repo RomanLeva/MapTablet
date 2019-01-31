@@ -53,11 +53,11 @@ public class JfxGuiController {
     public void clickTarget() {
         if (somethingPressed) return;
         if (!mapViewController.isPointSelected()) {
-            if (readyFire) {
+            if (readyFire) { // Point is not selected by mouse, but selected by buttons << >>.
                 ((MapPoint) poiLayersData.getFocusedPair().getKey()).setCommand(MapPoint.Commands.FIRE);
-                btnTarget.setText("WORKING");
-                appLogicController.pushPointToHQ(((MapPoint) poiLayersData.getFocusedPair().getKey()));
-            } else {
+                btnTarget.setText("WORK");
+                appLogicController.processIncomingMessage(((MapPoint) poiLayersData.getFocusedPair().getKey()), null);
+            } else { // Create new target point and pin it on the map.
                 if (poiLayersData.getTempPointLayer().getPoints().isEmpty()) return;
                 MapPoint t = poiLayersData.getTempPointLayer().getPoints().get(0).getKey();
                 t.setCommand(MapPoint.Commands.TARGET);
@@ -67,12 +67,12 @@ public class JfxGuiController {
                 poiLayersData.setFocusedPair(poiLayersData.getTargetPointsLayer().getPoints().getFirst());
                 ((Shape) poiLayersData.getTargetPointsLayer().getPoints().getFirst().getValue()).setFill(Color.BLUE);
                 mapViewController.setPointSelected(true);
-                appLogicController.pushPointToHQ(t);
+                appLogicController.processIncomingMessage(t, null);
             }
-        } else if (readyFire) {
+        } else if (readyFire) { // Point is selected and ready to be strafed.
             ((MapPoint) poiLayersData.getFocusedPair().getKey()).setCommand(MapPoint.Commands.FIRE);
             btnTarget.setText("WORK");
-            appLogicController.pushPointToHQ(((MapPoint) poiLayersData.getFocusedPair().getKey()));
+            appLogicController.processIncomingMessage(((MapPoint) poiLayersData.getFocusedPair().getKey()), null);
         }
     }
 
@@ -96,21 +96,24 @@ public class JfxGuiController {
         if (somethingPressed) return;
         Pair p = poiLayersData.getFocusedPair();
         for (MapLayer poiLayer : poiLayersData.getLayers()) {
-            if (poiLayer instanceof LinesLayer) continue;
-            Optional op = ((PointsLayer) poiLayer).getPoints().stream().filter(mapPointNodePair -> mapPointNodePair == p).findFirst();
-            if (op.isPresent()) {
-                Pair pp = (Pair) op.get();
-                MapPoint t = (MapPoint) pp.getKey();
-                t.setCommand(MapPoint.Commands.DESTROYED);
-                if (!((pp.getValue()) instanceof Polygon)) { // don't send triangular point
-                    appLogicController.pushPointToHQ(t);
+            if (poiLayer instanceof LinesLayer) { // Line was selected
+                continue; //TODO deleting lines
+            } else if (poiLayer instanceof PointsLayer) { // Point was selected
+                Optional op = ((PointsLayer) poiLayer).getPoints().stream().filter(mapPointNodePair -> mapPointNodePair == p).findFirst();
+                if (op.isPresent()) {
+                    Pair pp = (Pair) op.get();
+                    MapPoint t = (MapPoint) pp.getKey();
+                    t.setCommand(MapPoint.Commands.DESTROYED);
+                    if (!((pp.getValue()) instanceof Polygon)) { // don't send triangular point
+                        appLogicController.processIncomingMessage(t, null);
+                    }
+//                    ((Shape) pp.getValue()).setFill(Color.TRANSPARENT);
+//                    ((Shape) pp.getValue()).setVisible(false);
+//                    ((PointsLayer) poiLayer).getPoints().remove(pp);
+                    poiLayersData.setFocusedPair(new Pair<>(null, null));
+                    mapViewController.setPointSelected(false);
+                    break;
                 }
-                ((Shape) pp.getValue()).setFill(Color.TRANSPARENT);
-                ((Shape) pp.getValue()).setVisible(false);
-                ((PointsLayer) poiLayer).getPoints().remove(pp);
-                poiLayersData.setFocusedPair(new Pair<>(null, null));
-                mapViewController.setPointSelected(false);
-                break;
             }
         }
     }
@@ -125,7 +128,7 @@ public class JfxGuiController {
                 mapViewController.setSelectingMissed(false);
                 btnMissed.setSelected(false);
                 somethingPressed = false;
-                appLogicController.calculateAndPushAdjustments();
+//                appLogicController.processAdjustments();
                 poiLayersData.getMissedPointsLayer().getPoints().forEach(pair -> {
                     ((Shape) pair.getValue()).setFill(Color.TRANSPARENT);
                     pair.getValue().setVisible(false);
@@ -184,7 +187,7 @@ public class JfxGuiController {
                 poiLayersData.getMyPosPointLayer().getPoints().getFirst().getValue().setVisible(false);
                 poiLayersData.getMyPosPointLayer().getPoints().clear();
             }
-            poiLayersData.getMyPosPointLayer().addPoint(new MapPoint(t.getLatitude(), t.getLongitude()), new Circle(7, Color.YELLOW));
+            poiLayersData.getMyPosPointLayer().addPoint(new MapPoint(t.getLatitude(), t.getLongitude()), new Circle(7, Color.AQUAMARINE));
             poiLayersData.getTempPointLayer().deleteTempPoint();
         }
     }
@@ -226,8 +229,9 @@ public class JfxGuiController {
         appLogicController.createConnection();
     }
 
-    public void clickNotch(ActionEvent actionEvent) {
+    public void clickLaser(ActionEvent actionEvent) {
         if (somethingPressed) return;
+        // Use laser rangefinder, compass and your position point on the map to mark a landmark.
     }
 
     public void clickGun(ActionEvent actionEvent) {
@@ -287,7 +291,7 @@ public class JfxGuiController {
             if (poiLayersData.getTempPointLayer().getPoints().size() != 0)
                 poiLayersData.getTempPointLayer().deleteTempPoint();
             try {
-                poiLayersData.getLinesLayer().addLine(poiLayersData.getLineStartEndPoints().get(0), poiLayersData.getLineStartEndPoints().get(1));
+                poiLayersData.getLinesLayer().addLine(poiLayersData.getLineStartEndPoints().get(0), poiLayersData.getLineStartEndPoints().get(1), Color.AQUA);
             } catch (IndexOutOfBoundsException e) {
                 poiLayersData.getLineStartEndPoints().clear();
                 appLogicController.displayMessage("", true);
@@ -308,6 +312,5 @@ public class JfxGuiController {
     }
 
     public void clickUnit(ActionEvent actionEvent) {
-
     }
 }

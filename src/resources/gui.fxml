@@ -57,7 +57,7 @@
                   <Font name="System Bold" size="14.0" />
                </font>
             </Button>
-            <Button fx:id="btnLaser" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickNotch" text="LASER" textFill="#ff078b" GridPane.columnIndex="16" GridPane.rowIndex="1">
+            <Button fx:id="btnLaser" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLaser" text="LASER" textFill="#ff078b" GridPane.columnIndex="16" GridPane.rowIndex="1">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>
@@ -72,12 +72,12 @@
                   <Font name="System Bold" size="14.0" />
                </font>
             </Button>
-            <Button fx:id="btnMyposition" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickMyposition" text="MYPOS" textFill="#dad302" GridPane.columnIndex="5">
+            <Button fx:id="btnMyposition" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickMyposition" text="MYPOS" textFill="#0fffb4" GridPane.columnIndex="5">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>
             </Button>
-            <Button fx:id="btnGun" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickGun" text="GUN" textFill="#ff03ff" GridPane.columnIndex="4">
+            <Button fx:id="btnGun" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickGun" text="GUN" textFill="#ae05ff" GridPane.columnIndex="4">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>
@@ -135,7 +135,7 @@
                   <Font name="System Bold" size="16.0" />
                </font>
             </ToggleButton>
-            <Button fx:id="btnUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickUnit" text="UNIT" textFill="#07adee" GridPane.columnIndex="5" GridPane.rowIndex="1">
+            <Button fx:id="btnUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickUnit" text="UNIT" textFill="#078fed" GridPane.columnIndex="5" GridPane.rowIndex="1">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>
