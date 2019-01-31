@@ -47,7 +47,7 @@
                   <Font name="System Bold" size="14.0" />
                </font>
             </Button>
-            <Button fx:id="btnConnect" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickConnect" text="CONN" textFill="#06ccda" GridPane.columnIndex="16">
+            <Button fx:id="btnConnect" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickConnect" text="SPOT" textFill="#06ccda" GridPane.columnIndex="16" GridPane.rowIndex="1">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>
@@ -57,7 +57,7 @@
                   <Font name="System Bold" size="14.0" />
                </font>
             </Button>
-            <Button fx:id="btnLaser" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLaser" text="LASER" textFill="#ff078b" GridPane.columnIndex="16" GridPane.rowIndex="1">
+            <Button fx:id="btnLaser" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLaser" text="LASER" textFill="#ff078b" GridPane.columnIndex="15" GridPane.rowIndex="1">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>
@@ -130,12 +130,17 @@
                   <Font name="System Bold" size="14.0" />
                </font>
             </ToggleButton>
-            <ToggleButton fx:id="btnDownload" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickDownload" text="LOAD" textFill="#2b3cff" GridPane.columnIndex="9">
+            <ToggleButton fx:id="btnDownload" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickDownload" text="LOAD" textFill="#2b3cff" GridPane.columnIndex="15">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
             </ToggleButton>
             <Button fx:id="btnUnit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickUnit" text="UNIT" textFill="#078fed" GridPane.columnIndex="5" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="btnCreate" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickCreate" text="HEAD" textFill="#06ccda" GridPane.columnIndex="16">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>

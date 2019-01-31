@@ -240,6 +240,7 @@ public class MapViewController extends Region {
         refreshSelection();
         Optional<Pair<Pair<MapPoint, MapPoint>, Node>> op = poiLayersData.getLinesLayer().getLines().stream().filter(pair -> pair.getValue() == t.getTarget()).findFirst();
         op.ifPresent(pairNodePair -> {
+            if (((Shape) pairNodePair.getValue()).getStroke().equals(Color.BLACK) | ((Shape) pairNodePair.getValue()).getStroke().equals(Color.ORANGE)) return;
             poiLayersData.setFocusedLine(((Line) pairNodePair.getValue()));
             ((Shape) pairNodePair.getValue()).setStroke(Color.BLUE);
         });

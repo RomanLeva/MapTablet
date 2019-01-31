@@ -10,7 +10,6 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import javafx.util.Pair;
@@ -226,7 +225,14 @@ public class JfxGuiController {
     }
 
     public void clickConnect() {
-        appLogicController.createConnection();
+        appLogicController.usedAsClient = true;
+        appLogicController.connectTo();
+
+    }
+
+    public void clickCreate() {
+        appLogicController.usedAsClient = false;
+        appLogicController.createHeadQuarter();
     }
 
     public void clickLaser(ActionEvent actionEvent) {
@@ -313,4 +319,6 @@ public class JfxGuiController {
 
     public void clickUnit(ActionEvent actionEvent) {
     }
+
+
 }

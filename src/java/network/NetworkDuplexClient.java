@@ -3,9 +3,11 @@ import com.google.gson.Gson;
 import controller.AppLogicController;
 import data.MapPoint;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
@@ -22,23 +24,26 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.security.KeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-public class NetworkClient {
-    private static final Logger logger = Logger.getLogger(NetworkClient.class.getName());
+public class NetworkDuplexClient {
+    private static final Logger logger = Logger.getLogger(NetworkDuplexClient.class.getName());
     private final String secretWord = "uebanskie_uebani"; // the needed bit length keyword used in the both client and server
     private Cipher encodecipher, decodecipher;
     private String host;
     private int port;
-    private Channel channel; // Channel to HeadQuarters server
+    private ArrayList<Channel> channels = new ArrayList<>(); // List of channels connected if using app as server
+    private Channel channel; // Channel to HeadQuarters server if using app as client
     private AppLogicController applicationLogic;
     private ExecutorService es = Executors.newSingleThreadExecutor();
-    private MyClientHandler myClientHandler = new MyClientHandler();
+    private MyDuplexHandler myDuplexHandler = new MyDuplexHandler();
+    private EventLoopGroup bossGroup, workerGroup;
     private ObjectEncoder encoder = new ObjectEncoder();
 
-    public NetworkClient(AppLogicController applicationLogic) {
+    public NetworkDuplexClient(AppLogicController applicationLogic) {
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
         try {
             this.applicationLogic = applicationLogic;
@@ -59,6 +64,44 @@ public class NetworkClient {
         es.submit(this::bootStrapConnection); // Run in a new thread
     }
 
+    public void createServer(String port) {
+        this.port = Integer.parseInt(System.getProperty("port", port));
+        es.submit(this::bootStrapServer);
+    }
+
+    private void bootStrapServer() {
+        logger.info("Initiating server...");
+        try {
+            bossGroup = new NioEventLoopGroup(1);
+            workerGroup = new NioEventLoopGroup();
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) {
+                            try {
+                                channels.add(ch);
+                                ChannelPipeline p = ch.pipeline();
+                                p.addLast(
+                                        encoder,
+                                        new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
+                                        myDuplexHandler);
+                            } catch (Exception e) {
+                                logger.warning(e.getMessage());
+                            }
+                        }
+                    });
+            // Bind to port number and start to accept incoming connections.
+            b.bind(port).sync().channel().closeFuture().sync();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+        }
+    }
+
     // Creates connection from bootstrap, initializes the channel of this connection
     private synchronized void bootStrapConnection() {
         EventLoopGroup group = new NioEventLoopGroup();
@@ -69,16 +112,18 @@ public class NetworkClient {
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
+                            logger.info("Initiating client...");
                             ChannelPipeline p = ch.pipeline();
                             p.addLast(
                                     encoder,
                                     new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
-                                    myClientHandler);
+                                    myDuplexHandler);
                         }
                     });
             channel = b.connect(host, port).sync().channel();
             channel.closeFuture().sync();
         } catch (Exception e) {
+            e.printStackTrace();
             applicationLogic.displayMessage("No connection!", true);
         } finally {
             channel = null;
@@ -86,21 +131,34 @@ public class NetworkClient {
         }
     }
 
-    public void pushCommandPointToClient(MapPoint point, ChannelHandlerContext channelContext){
-        channelContext.writeAndFlush(point);
-        Platform.runLater(() -> applicationLogic.displayMessage("Pushing to server.", false));
+    public void pushCommandPointTo(MapPoint point, ChannelHandlerContext channelContext) {
+        channelContext.channel().writeAndFlush(point);
+        Platform.runLater(() -> applicationLogic.displayMessage("Point pushed.", false));
+    }
+
+    public void spreadPointAmongSpotters(MapPoint point) {
+        channels.forEach(chan -> chan.writeAndFlush(point, chan.voidPromise()));
     }
 
     public Channel getChannel() {
         return channel;
     }
 
+    public ArrayList<Channel> getChannels() {
+        return channels;
+    }
+
     // Class implementing channel actions
     @ChannelHandler.Sharable
-    private class MyClientHandler extends ChannelDuplexHandler {
+    private class MyDuplexHandler extends ChannelDuplexHandler {
         @Override
         public void channelActive(ChannelHandlerContext ctx) {
-            applicationLogic.displayMessage("Connection ready!", false);
+            applicationLogic.displayMessage("Channel active!", false);
+        }
+
+        @Override
+        public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+            applicationLogic.displayMessage("Channel registered!", false);
         }
 
         @Override
@@ -115,9 +173,9 @@ public class NetworkClient {
                 MapPoint point = gson.fromJson(jsonInString, MapPoint.class);
                 applicationLogic.processIncomingMessage(point, ctx);
             } catch (IOException | ClassNotFoundException e) {
-                logger.warning(e.getMessage());
+                e.printStackTrace();
             } catch (IllegalBlockSizeException | BadPaddingException c) {
-                // do nothing, abort maybe enemy messages
+                // do nothing
             }
         }
 
@@ -139,7 +197,8 @@ public class NetworkClient {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            applicationLogic.displayMessage("Connection broken!" ,true);
+            cause.printStackTrace();
+            applicationLogic.displayMessage("Connection broken!", true);
             channel = null;
             ctx.close();
         }

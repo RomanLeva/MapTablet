@@ -27,7 +27,7 @@
         </constructor-arg>
         <property name="client" ref="client" />
     </bean>
-    <bean id="client" class="network.NetworkClient">
+    <bean id="client" class="network.NetworkDuplexClient">
         <constructor-arg name="applicationLogic">
             <ref bean="logic"/>
         </constructor-arg>

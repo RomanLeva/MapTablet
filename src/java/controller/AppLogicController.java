@@ -12,19 +12,20 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Shape;
 import javafx.util.Pair;
 import maps.*;
-import network.NetworkClient;
+import network.NetworkDuplexClient;
 
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class AppLogicController {
-    private NetworkClient client;
+    private NetworkDuplexClient client;
+    boolean usedAsClient = true; // false if used as server
     private JfxGuiController guiController;
     private PoiLayersData poiLayersData;
     private Channel channel;
     private BaseMap baseMap;
-    private Map<MapPoint, ChannelHandlerContext> targetChannelMap;
+    private Map<MapPoint, ChannelHandlerContext> targetChannelMap = new HashMap<>();
     private Map<MapPoint, MapPoint> targetWeaponMap = new HashMap<>();
     private static AtomicLong ID = new AtomicLong(1);
 
@@ -40,37 +41,33 @@ public class AppLogicController {
                 ID.compareAndSet(Long.MAX_VALUE, 1);
                 point.setId(ID.getAndIncrement());
                 Platform.runLater(() -> { // Draw circle on the map
-                    if (channelContext != null){ // Message from your UI
+                    if (channelContext != null){ // Message from network, for example new target from a spotter
                         Circle circle = new Circle(7, Color.RED);
                         poiLayersData.getTargetPointsLayer().addPoint(point, circle);
                     }
                 });
                 // If there is a weapon in 30 km range, return it, else return special command point NOWEAPON
-                if (!poiLayersData.getWeaponPointsLayer().getPoints().isEmpty()) {
-                    MapPoint weapon = nearestGunToTarget(point);
-                    if (!weapon.getCommand().equals(MapPoint.Commands.NOWEAPON)) {
-                        // So, there is a weapon in your department
+                if (!poiLayersData.getWeaponPointsLayer().getPoints().isEmpty()) { // Test if there are some weapons in your department.
+                    MapPoint weapon = nearestGunToTarget(point); // So, there is at most one weapon in your department.
+                    if (!weapon.getCommand().equals(MapPoint.Commands.NOWEAPON)) { // Watch is this weapon is near enough to fire.
+                        // So it is ready to fire!
                         weapon.setCommand(MapPoint.Commands.BUSY);
                         point.setCommand(MapPoint.Commands.READY);
                         targetWeaponMap.put(point, weapon);
                         poiLayersData.getWeaponsAdjustmentsMap().put(weapon, new ArrayList<>());
                         calculateAiming(weapon, point);
                         Platform.runLater(() -> poiLayersData.getLinesLayer().addLine(weapon, point, Color.BLACK)); // Draw line between points
-                        if (channelContext == null) {
+                        if (channelContext == null) { // If context is null its means that target came from user input and not from other spotter client from the network.
                             processNewTarget(point, weapon); // Response to gun from your department, do all the calculations!
                         } else {
                             targetChannelMap.put(point, channelContext);
-                            client.pushCommandPointToClient(point, channelContext); // Response to other client
+                            client.pushCommandPointTo(point, channelContext); // Response to other client
                         }
-                    } else { // No near weapon in your department, send NOWEAPON response or do nothing.
-                        if (channelContext != null) client.pushCommandPointToClient(weapon, channelContext);
+                    } else { // No near weapon in your department.
+                        spreadPoint(point, channelContext);
                     }
-                } else { // Any gun in your dept, send NOWEAPON response or do nothing.
-                    if (channelContext != null) {
-                        MapPoint p = new MapPoint(0, 0);
-                        p.setCommand(MapPoint.Commands.NOWEAPON);
-                        client.pushCommandPointToClient(p, channelContext);
-                    }
+                } else { // Any weapon in your dept.
+                    spreadPoint(point, channelContext);
                 }
                 break;
             }
@@ -86,10 +83,14 @@ public class AppLogicController {
                 break;
             }
             case FIRE: {
-                Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
-                        l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
-                lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
-                // Next, push here the command directly to a cannoneer... somehow.
+                if (channelContext == null){
+                    Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
+                            l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
+                    lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
+                    // Next, push here the command directly to a cannoneer from your department... somehow.
+                } else {
+                    client.pushCommandPointTo(point, targetChannelMap.get(point));
+                }
                 break;
             }
             case READY: {
@@ -110,9 +111,21 @@ public class AppLogicController {
                 break;
             }
             case NOWEAPON: {
-                Platform.runLater(() -> displayMessage("Out of 30 km range / no gun.", false));
+                Platform.runLater(() -> displayMessage("Out of 30 km range\n or no gun.", false));
                 break;
             }
+        }
+    }
+
+    private void spreadPoint(MapPoint point, ChannelHandlerContext context){
+        if (context == null) { // context == null if target created by the user input, else if came from network from an other spotter
+            if (usedAsClient){
+                client.getChannel().writeAndFlush(point, client.getChannel().voidPromise()); // Push the new target to the Head quarters ! Inside the HQ it will spread among others if needed.
+            } else client.spreadPointAmongSpotters(point); // Target created by user input, spread it among other clients.
+        } else {
+            MapPoint p = new MapPoint(0, 0);
+            p.setCommand(MapPoint.Commands.NOWEAPON);
+            client.pushCommandPointTo(p, context); // Send NOWEAPON response back, they will decide what to do.
         }
     }
 
@@ -335,15 +348,21 @@ public class AppLogicController {
         }
     }
 
-    void createConnection() {
+    void connectTo() {
         client.establishConnection("127.0.0.1", "8007"); //Will run the client in a new thread
     }
 
-    public void setClient(NetworkClient client) {
+    void createHeadQuarter() {
+        client.createServer("8007");
+    }
+
+    public void setClient(NetworkDuplexClient client) {
         this.client = client;
     }
 
     public void setGuiController(JfxGuiController guiController) {
         this.guiController = guiController;
     }
+
+
 }
