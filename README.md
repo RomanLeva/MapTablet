@@ -1,5 +1,5 @@
 # MapTablet
-Map tablet application for any emergency services like Fire Resque, Police and even Artillery / Mortar. The main idea that users can
+Map tablet application for paintball game, emergency services and even artillery or mortar. The main idea that users can
 create theirs teams and watch synchronously theirs positions, exchange points, lines, arrows, commands and so on. 
 A commander can simply pin a target point on the map, application will select the nearest unit from your team and calculate for him coordinates, direction and distance to that target. Also, commander can select units and send them to any mark point on the map (like in StarCraft),
 and so, for units there will apear a mark point and arrow. 
