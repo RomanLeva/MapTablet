@@ -17,10 +17,13 @@ import maps.LinesLayer;
 import maps.MapLayer;
 import maps.PointsLayer;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.Optional;
 
-public class JfxGuiController {
+// Useful only in JavaFX applications, uses its specific methods. Works in pair only with MapView controller.
+public class JfxGuiController implements GUIController{
     public Button btnLaser;
     public Button btnTriangul;
     public Button btnMyposition;
@@ -46,13 +49,12 @@ public class JfxGuiController {
     private AppLogicController appLogicController; // controller of entire app logic and decisions
     private PoiLayersData poiLayersData;
     private int targetMaxIndex, targetNextIndex = 0;
-    boolean readyFire = false;
     private boolean somethingPressed = false;
 
     public void clickTarget() {
         if (somethingPressed) return;
         if (!mapViewController.isPointSelected()) {
-            if (readyFire) { // Point is not selected by mouse, but selected by buttons << >>.
+            if (mapViewController.readyFire) { // Point is not selected by mouse, but selected by buttons << >>.
                 ((MapPoint) poiLayersData.getFocusedPair().getKey()).setCommand(MapPoint.Commands.FIRE);
                 btnTarget.setText("WORK");
                 appLogicController.processIncomingMessage(((MapPoint) poiLayersData.getFocusedPair().getKey()), null);
@@ -68,7 +70,7 @@ public class JfxGuiController {
                 mapViewController.setPointSelected(true);
                 appLogicController.processIncomingMessage(t, null);
             }
-        } else if (readyFire) { // Point is selected and ready to be strafed.
+        } else if (mapViewController.readyFire) { // Point is selected by mouse and ready to be strafed.
             ((MapPoint) poiLayersData.getFocusedPair().getKey()).setCommand(MapPoint.Commands.FIRE);
             btnTarget.setText("WORK");
             appLogicController.processIncomingMessage(((MapPoint) poiLayersData.getFocusedPair().getKey()), null);
@@ -228,7 +230,6 @@ public class JfxGuiController {
     public void clickConnect() {
         appLogicController.usedAsClient = true;
         appLogicController.connectTo();
-
     }
 
     public void clickCreate() {
@@ -321,5 +322,43 @@ public class JfxGuiController {
     public void clickUnit(ActionEvent actionEvent) {
     }
 
+    @Override
+    public void setLatitude(String latitude) {
+        txtLat.setText(latitude + " lat");
+    }
 
+    @Override
+    public void setLongitude(String longitude) {
+        txtLon.setText(longitude + " lon");
+    }
+
+    @Override
+    public void setButtonText(String buttonText) {
+        btnTarget.setText(buttonText);
+    }
+
+    @Override
+    public void setDirection(String direction) {
+        DecimalFormat df_angle_dir = new DecimalFormat("#.###");
+//        df_angle_dir.setRoundingMode(RoundingMode.CEILING);
+        txtDir.setText(df_angle_dir.format(direction) + "\u00b0");
+    }
+
+    @Override
+    public void setDistance(String distance) {
+        DecimalFormat df_dist = new DecimalFormat("###,###,###");
+        txtDist.setText(df_dist.format(distance) + " m");
+    }
+    @Override
+    public void setInfo(String info){
+        txtInfo.setText(info);
+    }
+    public void eraseFields(){
+        txtInfo.setText("");
+        txtDist.setText("");
+        txtDir.setText("");
+        txtLon.setText("");
+        txtLat.setText("");
+        btnTarget.setText("TARG");
+    }
 }

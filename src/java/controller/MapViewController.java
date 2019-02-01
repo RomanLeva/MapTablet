@@ -27,11 +27,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import static javafx.scene.paint.Color.RED;
+
 /**
- * This is the top UI element of the map component. Useful only in JavaFX desktop applications.
+ * This is the top UI element of the MAP component. Useful only in JavaFX desktop applications. Uses specific JavaFX Region class methods and Java listeners.
  */
 public class MapViewController extends Region {
-    private static final Logger logger = Logger.getLogger(MapViewController.class.getName());
     private BaseMap baseMap;
     private Timeline timeline;
     private final Rectangle clip;
@@ -45,8 +46,9 @@ public class MapViewController extends Region {
     private boolean selectingDownload = false;
     private boolean selectingLine = false;
     private PoiLayersData poiLayersData;
-    private JfxGuiController jfxGuiController;
+    private GUIController guiController;
     private Point2D anchor2D;
+    boolean readyFire;
 
     public MapViewController(BaseMap baseMap, PoiLayersData poiLayersData) {
         this.baseMap = baseMap;
@@ -226,21 +228,17 @@ public class MapViewController extends Region {
             ((Shape) poiLayersData.getFocusedPair().getValue()).setFill(focusedColor);
             poiLayersData.setFocusedPair(new Pair<>(null, null));
         }
-        poiLayersData.getFocusedLine().setStroke(Color.RED);
-        jfxGuiController.readyFire = false;
-        jfxGuiController.txtInfo.setText("");
-        jfxGuiController.txtDist.setText("");
-        jfxGuiController.txtDir.setText("");
-        jfxGuiController.txtLon.setText("");
-        jfxGuiController.txtLat.setText("");
-        jfxGuiController.btnTarget.setText("TARG");
+        poiLayersData.getFocusedLine().setStroke(RED);
+        readyFire = false;
+        guiController.eraseFields();
     }
 
     private void selectLine(MouseEvent t) {
         refreshSelection();
         Optional<Pair<Pair<MapPoint, MapPoint>, Node>> op = poiLayersData.getLinesLayer().getLines().stream().filter(pair -> pair.getValue() == t.getTarget()).findFirst();
         op.ifPresent(pairNodePair -> {
-            if (((Shape) pairNodePair.getValue()).getStroke().equals(Color.BLACK) | ((Shape) pairNodePair.getValue()).getStroke().equals(Color.ORANGE)) return;
+            if (((Shape) pairNodePair.getValue()).getStroke().equals(Color.BLACK) | ((Shape) pairNodePair.getValue()).getStroke().equals(Color.ORANGE))
+                return;
             poiLayersData.setFocusedLine(((Line) pairNodePair.getValue()));
             ((Shape) pairNodePair.getValue()).setStroke(Color.BLUE);
         });
@@ -254,27 +252,23 @@ public class MapViewController extends Region {
             if (op.isPresent()) {
                 Pair<MapPoint, Node> pair = op.get();
                 focusedColor = ((Shape) pair.getValue()).getFill();
-                if (focusedColor.equals(Color.RED)) {
+                if (focusedColor.equals(RED)) { // Change TARG button text if user selects target pointed by gunner.
                     switch (pair.getKey().getCommand()) {
                         case READY:
-                            jfxGuiController.btnTarget.setText("FIRE!");
-                            jfxGuiController.readyFire = true;
+                            guiController.setButtonText("FIRE!");
+                            readyFire = true; // This flag than will be used after pressing TARG button one more time.
                             break;
                         case FIRE:
-                            jfxGuiController.btnTarget.setText("WORK");
+                            guiController.setButtonText("WORK");
                             break;
                     }
                 } else if (focusedColor == Color.ORCHID) {
                     List<Double> l = poiLayersData.getWeaponsAdjustmentsMap().get(pair.getKey());
-                    if (l != null) {
-                        if (!l.isEmpty()) {
-                            DecimalFormat df_dist = new DecimalFormat("###,###,###");
-                            DecimalFormat df_angle_dir = new DecimalFormat("#.###");
-                            Platform.runLater(() -> {
-                                jfxGuiController.txtDir.setText(df_angle_dir.format(l.get(0)) + "\u00b0");
-                                jfxGuiController.txtDist.setText(df_dist.format(l.get(1)) + " m");
-                            });
-                        }
+                    if (l != null && !l.isEmpty()) {
+                        Platform.runLater(() -> {
+                            guiController.setDirection(String.valueOf(l.get(0)));
+                            guiController.setDistance(String.valueOf(l.get(1)));
+                        });
                     }
                 }
                 if (focusedColor == Color.YELLOW) return;
@@ -364,11 +358,7 @@ public class MapViewController extends Region {
 
     // Show distance between point only if you have your position point and put (or select) another point on map
     void showDistanceToSelectedPoint() {
-        jfxGuiController.txtDist.setText("");
-        jfxGuiController.txtDir.setText("");
-        DecimalFormat df = new DecimalFormat("#.###");
-        DecimalFormat df_dist = new DecimalFormat("###,###,###");
-        df.setRoundingMode(RoundingMode.CEILING);
+        guiController.eraseFields();
         MapPoint selected_deg;
         if (isPointSelected) {
             selected_deg = ((MapPoint) poiLayersData.getFocusedPair().getKey());
@@ -384,7 +374,7 @@ public class MapViewController extends Region {
             double y = y_deg * 111120; //111120 м - средняя длина одного градуса широты
             double c = Math.round(Math.sqrt(x * x + y * y));
             int ci = ((int) c);
-            jfxGuiController.txtDist.setText(df_dist.format(ci) + " m");
+            guiController.setDistance(String.valueOf(ci));
             // Next will show the direction on selected point, first we need to define in what quarter the target is displaced
             boolean right = false;
             boolean up = false;
@@ -407,10 +397,10 @@ public class MapViewController extends Region {
                 angle = 270 + a;
             }
             if (ci == 0) angle = 0;
-            jfxGuiController.txtDir.setText(String.valueOf(df.format(angle)) + "\u00b0");
+            guiController.setDirection(String.valueOf(angle));
         }
-        jfxGuiController.txtLon.setText(String.valueOf(df.format(selected_deg.getLongitude())) + " lon");
-        jfxGuiController.txtLat.setText(String.valueOf(df.format(selected_deg.getLatitude())) + " lat");
+        guiController.setLongitude(String.valueOf(selected_deg.getLongitude()));
+        guiController.setLatitude(String.valueOf(selected_deg.getLatitude()));
     }
 
     boolean isPointSelected() {
@@ -429,8 +419,8 @@ public class MapViewController extends Region {
         this.selectingMissed = selectingMissed;
     }
 
-    public void setGuiController(JfxGuiController jfxGuiController) {
-        this.jfxGuiController = jfxGuiController;
+    public void setGuiController(GUIController guiController) {
+        this.guiController = guiController;
     }
 
     void setFocusedColor(Color color) {

@@ -10,17 +10,17 @@ import maps.MapLayer;
 import maps.PointsLayer;
 
 import java.util.*;
-
+// Class that is used by all the others classes. Represents state of collections for all users.
 public class PoiLayersData {
     private PointsLayer targetPointsLayer, weaponPointsLayer, triangPointsLayer, marksPointsLayer, missedPointsLayer, tempPointLayer, myPosPointLayer;
     private LinesLayer linesLayer;
-    private final List<MapLayer> layers = new LinkedList<>();
-    private Pair<MapPoint, Node> focusedPair = new Pair<>(null, null);
-    private Line focusedLine = new Line();
-    private ArrayList<MapPoint> downloadCornerPoints = new ArrayList<>(2);
+    private final List<MapLayer> layers = new LinkedList<>(); // All layers together
+    private Pair<MapPoint, Node> focusedPair = new Pair<>(null, null); // Used when user selects some point. Pair because it retains point object and its drawable node
+    private Line focusedLine = new Line(); // Used when user selects some line.
+    private ArrayList<MapPoint> downloadCornerPoints = new ArrayList<>(2); // Temporary containers
     private ArrayList<MapPoint> lineStartEndPoints = new ArrayList<>(2);
     public Rectangle rectangle = new Rectangle();
-    private Map<MapPoint, List<Double>> weaponsAdjustmentsMap = new HashMap<>();
+    private Map<MapPoint, List<Double>> weaponsAdjustmentsMap = new HashMap<>(); // Each working weapon has its calculated direction and angle, here they are stored.
 
     public PoiLayersData(BaseMap baseMap) {
         targetPointsLayer = new PointsLayer();

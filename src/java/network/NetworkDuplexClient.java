@@ -69,6 +69,15 @@ public class NetworkDuplexClient {
         es.submit(this::bootStrapServer);
     }
 
+    public void pushCommandPointTo(MapPoint point, ChannelHandlerContext channelContext) {
+        channelContext.channel().writeAndFlush(point);
+        Platform.runLater(() -> applicationLogic.displayMessage("Point pushed.", false));
+    }
+
+    public void spreadPointAmongSpotters(MapPoint point) {
+        channels.forEach(chan -> chan.writeAndFlush(point, chan.voidPromise()));
+    }
+
     private void bootStrapServer() {
         logger.info("Initiating server...");
         try {
@@ -129,15 +138,6 @@ public class NetworkDuplexClient {
             channel = null;
             group.shutdownGracefully();
         }
-    }
-
-    public void pushCommandPointTo(MapPoint point, ChannelHandlerContext channelContext) {
-        channelContext.channel().writeAndFlush(point);
-        Platform.runLater(() -> applicationLogic.displayMessage("Point pushed.", false));
-    }
-
-    public void spreadPointAmongSpotters(MapPoint point) {
-        channels.forEach(chan -> chan.writeAndFlush(point, chan.voidPromise()));
     }
 
     public Channel getChannel() {

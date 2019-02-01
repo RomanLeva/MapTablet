@@ -26,7 +26,7 @@ public class LinesLayer extends MapLayer {
         this.getChildren().add(line);
         this.markDirty();
     }
-
+    // Used in redrawing lines after scrolling or zooming.
     @Override
     public void layoutLayer() {
         for (Pair<Pair<MapPoint, MapPoint>, Node> candidate : lines) { // Redraw lines
