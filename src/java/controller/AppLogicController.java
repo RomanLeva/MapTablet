@@ -67,10 +67,10 @@ public class AppLogicController {
                         spreadPoint(point, channelContext);
                     }
                 } else { // Any weapon in your dept.
-                    if (channelContext == null){
+                    if (channelContext == null) {
                         spreadPoint(point, channelContext);
-                    } else{
-                        MapPoint n = new MapPoint(0,0);
+                    } else {
+                        MapPoint n = new MapPoint(0, 0);
                         n.setCommand(MapPoint.Commands.NOWEAPON);
                         client.pushCommandPointTo(n, channelContext); // Response to other client
                     }
@@ -89,22 +89,14 @@ public class AppLogicController {
                 break;
             }
             case FIRE: {
-                if (channelContext == null){
-                    if (targetChannelMap.containsKey(point)) { //
-                        client.pushCommandPointTo(point, targetChannelMap.get(point));
-                    } else {
-                        Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
-                                l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
-                        lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
-                        // Next, push here the command directly to the cannoneer from your department... somehow.
-                    }
-                } else {
-                    Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
-                            l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
-                    lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
-                    // Next, push here the command directly to the cannoneer from your department... somehow.
+                if (channelContext == null & targetChannelMap.containsKey(point)) {
+                    client.pushCommandPointTo(point, targetChannelMap.get(point));
+                    break;
                 }
-
+                Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
+                        l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
+                lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
+                // Next, push here the command directly to the cannoneer from your department... somehow.
                 break;
             }
             case READY: {
@@ -168,7 +160,7 @@ public class AppLogicController {
         long currentTargetID = ((MapPoint) poiLayersData.getFocusedPair().getKey()).getId();
         mapPoint.setId(currentTargetID);
         MapPoint focusedTarg = ((MapPoint) poiLayersData.getFocusedPair().getKey());
-        if (targetChannelMap.containsKey(focusedTarg)){
+        if (targetChannelMap.containsKey(focusedTarg)) {
             client.pushCommandPointTo(mapPoint, targetChannelMap.get(focusedTarg));
         } else processIncomingMessage(mapPoint, null);
     }
