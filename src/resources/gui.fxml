@@ -57,7 +57,7 @@
                   <Font name="System Bold" size="14.0" />
                </font>
             </Button>
-            <Button fx:id="btnLaser" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLaser" text="LASER" textFill="#ff078b" GridPane.columnIndex="15" GridPane.rowIndex="1">
+            <Button fx:id="btnLaser" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLaser" text="LASER" textFill="#ff08bc" GridPane.columnIndex="15" GridPane.rowIndex="1">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>
@@ -125,7 +125,7 @@
                   <Font name="System Bold" size="29.0" />
                </font>
             </Button>
-            <ToggleButton fx:id="btnLine" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLine" text="LINE" textFill="#e33a05" GridPane.columnIndex="8" GridPane.rowIndex="1">
+            <ToggleButton fx:id="btnLine" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickLine" text="LINE" textFill="#f80909" GridPane.columnIndex="8" GridPane.rowIndex="1">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>

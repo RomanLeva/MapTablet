@@ -105,10 +105,11 @@ public class JfxGuiController {
                     t.setCommand(MapPoint.Commands.DESTROYED);
                     if (!((pp.getValue()) instanceof Polygon)) { // don't send triangular point
                         appLogicController.processIncomingMessage(t, null);
+                    } else {
+                        ((Shape) pp.getValue()).setFill(Color.TRANSPARENT);
+                        ((Shape) pp.getValue()).setVisible(false);
+                        ((PointsLayer) poiLayer).getPoints().remove(pp);
                     }
-//                    ((Shape) pp.getValue()).setFill(Color.TRANSPARENT);
-//                    ((Shape) pp.getValue()).setVisible(false);
-//                    ((PointsLayer) poiLayer).getPoints().remove(pp);
                     poiLayersData.setFocusedPair(new Pair<>(null, null));
                     mapViewController.setPointSelected(false);
                     break;
@@ -127,7 +128,7 @@ public class JfxGuiController {
                 mapViewController.setSelectingMissed(false);
                 btnMissed.setSelected(false);
                 somethingPressed = false;
-//                appLogicController.processAdjustments();
+                appLogicController.processAdjustments();
                 poiLayersData.getMissedPointsLayer().getPoints().forEach(pair -> {
                     ((Shape) pair.getValue()).setFill(Color.TRANSPARENT);
                     pair.getValue().setVisible(false);
@@ -240,7 +241,7 @@ public class JfxGuiController {
         // Use laser rangefinder, compass and your position point on the map to mark a landmark.
     }
 
-    public void clickGun(ActionEvent actionEvent) {
+    public void clickGun() {
         if (somethingPressed) return;
         if (poiLayersData.getTempPointLayer().getPoints().isEmpty()) return;
         MapPoint t = poiLayersData.getTempPointLayer().getPoints().get(0).getKey();
@@ -297,7 +298,7 @@ public class JfxGuiController {
             if (poiLayersData.getTempPointLayer().getPoints().size() != 0)
                 poiLayersData.getTempPointLayer().deleteTempPoint();
             try {
-                poiLayersData.getLinesLayer().addLine(poiLayersData.getLineStartEndPoints().get(0), poiLayersData.getLineStartEndPoints().get(1), Color.AQUA);
+                poiLayersData.getLinesLayer().addLine(poiLayersData.getLineStartEndPoints().get(0), poiLayersData.getLineStartEndPoints().get(1), Color.RED);
             } catch (IndexOutOfBoundsException e) {
                 poiLayersData.getLineStartEndPoints().clear();
                 appLogicController.displayMessage("", true);

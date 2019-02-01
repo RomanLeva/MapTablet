@@ -41,7 +41,7 @@ public class AppLogicController {
                 ID.compareAndSet(Long.MAX_VALUE, 1);
                 point.setId(ID.getAndIncrement());
                 Platform.runLater(() -> { // Draw circle on the map
-                    if (channelContext != null){ // Message from network, for example new target from a spotter
+                    if (channelContext != null) { // Message from network, for example new target from a spotter
                         Circle circle = new Circle(7, Color.RED);
                         poiLayersData.getTargetPointsLayer().addPoint(point, circle);
                     }
@@ -67,7 +67,13 @@ public class AppLogicController {
                         spreadPoint(point, channelContext);
                     }
                 } else { // Any weapon in your dept.
-                    spreadPoint(point, channelContext);
+                    if (channelContext == null){
+                        spreadPoint(point, channelContext);
+                    } else{
+                        MapPoint n = new MapPoint(0,0);
+                        n.setCommand(MapPoint.Commands.NOWEAPON);
+                        client.pushCommandPointTo(n, channelContext); // Response to other client
+                    }
                 }
                 break;
             }
@@ -84,13 +90,21 @@ public class AppLogicController {
             }
             case FIRE: {
                 if (channelContext == null){
+                    if (targetChannelMap.containsKey(point)) { //
+                        client.pushCommandPointTo(point, targetChannelMap.get(point));
+                    } else {
+                        Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
+                                l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
+                        lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
+                        // Next, push here the command directly to the cannoneer from your department... somehow.
+                    }
+                } else {
                     Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
                             l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
                     lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
-                    // Next, push here the command directly to a cannoneer from your department... somehow.
-                } else {
-                    client.pushCommandPointTo(point, targetChannelMap.get(point));
+                    // Next, push here the command directly to the cannoneer from your department... somehow.
                 }
+
                 break;
             }
             case READY: {
@@ -101,9 +115,10 @@ public class AppLogicController {
                     ot.ifPresent(mapPointNodePair -> {
                         mapPointNodePair.getKey().setCommand(MapPoint.Commands.READY);
                         mapPointNodePair.getKey().setId(point.getId());
+                        targetChannelMap.put(mapPointNodePair.getKey(), channelContext);
                     });
                     MapPoint current = ((MapPoint) poiLayersData.getFocusedPair().getKey());
-                    if (current.getLatitude() == point.getLatitude() & current.getLongitude() == point.getLongitude()) {
+                    if (current != null && current.getLatitude() == point.getLatitude() & current.getLongitude() == point.getLongitude()) {
                         guiController.btnTarget.setText("FIRE!");
                         guiController.readyFire = true;
                     }
@@ -117,11 +132,12 @@ public class AppLogicController {
         }
     }
 
-    private void spreadPoint(MapPoint point, ChannelHandlerContext context){
+    private void spreadPoint(MapPoint point, ChannelHandlerContext context) {
         if (context == null) { // context == null if target created by the user input, else if came from network from an other spotter
-            if (usedAsClient){
+            if (usedAsClient & client.getChannel() != null) {
                 client.getChannel().writeAndFlush(point, client.getChannel().voidPromise()); // Push the new target to the Head quarters ! Inside the HQ it will spread among others if needed.
-            } else client.spreadPointAmongSpotters(point); // Target created by user input, spread it among other clients.
+            } else
+                client.spreadPointAmongSpotters(point); // Target created by user input, spread it among other clients.
         } else {
             MapPoint p = new MapPoint(0, 0);
             p.setCommand(MapPoint.Commands.NOWEAPON);
@@ -138,10 +154,7 @@ public class AppLogicController {
         }
     }
 
-    private void processDeleting(MapPoint t) {
-    }
-
-    private void processAdjustments() {
+    void processAdjustments() {
         int allX = 0, allY = 0;
         for (Pair<MapPoint, Node> p : poiLayersData.getMissedPointsLayer().getPoints()) {
             Point2D point2D = baseMap.getMapPointFromDegreesToXY(p.getKey().getLatitude(), p.getKey().getLongitude());
@@ -154,13 +167,17 @@ public class AppLogicController {
         mapPoint.setCommand(MapPoint.Commands.ADJUSTMENT); // Middle point of all missed points
         long currentTargetID = ((MapPoint) poiLayersData.getFocusedPair().getKey()).getId();
         mapPoint.setId(currentTargetID);
-//        pushPointToHQ(mapPoint);
+        MapPoint focusedTarg = ((MapPoint) poiLayersData.getFocusedPair().getKey());
+        if (targetChannelMap.containsKey(focusedTarg)){
+            client.pushCommandPointTo(mapPoint, targetChannelMap.get(focusedTarg));
+        } else processIncomingMessage(mapPoint, null);
     }
 
     private void destroyPoint(MapPoint point) {
         List<Pair> list = new LinkedList<>();
-        for (MapLayer layer : poiLayersData.getLayers()){
+        for (MapLayer layer : poiLayersData.getLayers()) {
             if (layer instanceof LinesLayer) continue;
+            if (list.size() > 0) break;
             ((PointsLayer) layer).getPoints().stream().filter(pair ->
                     pair.getKey().getLatitude() == point.getLatitude() & pair.getKey().getLongitude() == point.getLongitude()).forEach(list::add);
         }
@@ -172,6 +189,7 @@ public class AppLogicController {
         Optional<Pair<MapPoint, Node>> ot = poiLayersData.getTargetPointsLayer().getPoints().stream().filter(p ->
                 p.getKey().getLatitude() == selected.getLatitude() & p.getKey().getLongitude() == selected.getLongitude()).findFirst();
         if (ot.isPresent()) { // target point was selected
+            if (targetChannelMap.containsKey(point)) client.pushCommandPointTo(point, targetChannelMap.get(point));
             if (targetWeaponMap.containsKey(selected)) {
                 Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
                         l.getKey().getValue().getLatitude() == selected.getLatitude() & l.getKey().getValue().getLongitude() == selected.getLongitude()).findFirst();
@@ -188,8 +206,8 @@ public class AppLogicController {
             poiLayersData.getTargetPointsLayer().getPoints().remove(ot.get());
             try {
                 targetChannelMap.remove(selected);
-            } catch (NullPointerException e){}
-
+            } catch (NullPointerException e) {
+            }
         }
         Optional ow = poiLayersData.getWeaponPointsLayer().getPoints().stream().filter(p ->
                 p.getKey().getLatitude() == selected.getLatitude() & p.getKey().getLongitude() == selected.getLongitude()).findFirst();
@@ -349,10 +367,12 @@ public class AppLogicController {
     }
 
     void connectTo() {
+        displayMessage("Connecting to...", true);
         client.establishConnection("127.0.0.1", "8007"); //Will run the client in a new thread
     }
 
     void createHeadQuarter() {
+        displayMessage("Creating server...", true);
         client.createServer("8007");
     }
 
@@ -363,6 +383,4 @@ public class AppLogicController {
     public void setGuiController(JfxGuiController guiController) {
         this.guiController = guiController;
     }
-
-
 }

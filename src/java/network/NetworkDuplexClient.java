@@ -157,11 +157,6 @@ public class NetworkDuplexClient {
         }
 
         @Override
-        public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-            applicationLogic.displayMessage("Channel registered!", false);
-        }
-
-        @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             try {
                 Byte[] byteObject = ((Byte[]) msg);
