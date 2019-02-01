@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AppLogicController {
     private NetworkDuplexClient client;
     boolean usedAsClient = true; // false if used as server
-    private JfxGuiController guiController;
+    private GUIController guiController;
     private PoiLayersData poiLayersData;
     private Channel channel;
     private BaseMap baseMap;
@@ -68,7 +68,7 @@ public class AppLogicController {
                     }
                 } else { // Any weapon in your dept.
                     if (channelContext == null) {
-                        spreadPoint(point, channelContext);
+                        spreadPoint(point, null);
                     } else {
                         MapPoint n = new MapPoint(0, 0);
                         n.setCommand(MapPoint.Commands.NOWEAPON);
@@ -101,7 +101,7 @@ public class AppLogicController {
             }
             case READY: {
                 Platform.runLater(() -> {
-                    displayMessage("Gun ready!", false);
+                    displayMessage("Gun ready!");
                     Optional<Pair<MapPoint, Node>> ot = poiLayersData.getTargetPointsLayer().getPoints().stream().filter(p ->
                             p.getKey().getLatitude() == point.getLatitude() & p.getKey().getLongitude() == point.getLongitude()).findFirst();
                     ot.ifPresent(mapPointNodePair -> {
@@ -111,14 +111,14 @@ public class AppLogicController {
                     });
                     MapPoint current = ((MapPoint) poiLayersData.getFocusedPair().getKey());
                     if (current != null && current.getLatitude() == point.getLatitude() & current.getLongitude() == point.getLongitude()) {
-                        guiController.btnTarget.setText("FIRE!");
-                        guiController.readyFire = true;
+                        guiController.setButtonText("FIRE!");
+                        guiController.setReadyFire(true);
                     }
                 });
                 break;
             }
             case NOWEAPON: {
-                Platform.runLater(() -> displayMessage("Out of 30 km range\n or no gun.", false));
+                Platform.runLater(() -> displayMessage("Out of 30 km range\n or no gun."));
                 break;
             }
         }
@@ -138,11 +138,11 @@ public class AppLogicController {
     }
 
     private void processNewTarget(MapPoint target, MapPoint weapon) {
-        displayMessage("Gun ready!", false);
+        displayMessage("Gun ready!");
         MapPoint current = ((MapPoint) poiLayersData.getFocusedPair().getKey());
         if (current.getLatitude() == target.getLatitude() & current.getLongitude() == target.getLongitude()) {
-            guiController.btnTarget.setText("FIRE!");
-            guiController.readyFire = true;
+            guiController.setButtonText("FIRE!");
+            guiController.setReadyFire(true);
         }
     }
 
@@ -276,21 +276,14 @@ public class AppLogicController {
             direction = 270 + Math.toDegrees(Math.acos(x / c));
         }
         List<Double> l = poiLayersData.getWeaponsAdjustmentsMap().get(weapon);
-        StringBuilder s = new StringBuilder();
-        if (target.getCommand().equals(MapPoint.Commands.ADJUSTMENT)) {
-            l.clear();
-            s.append("A-");
-        }
+        if (target.getCommand().equals(MapPoint.Commands.ADJUSTMENT)) l.clear();
         l.add(direction);
         l.add(c);
         Platform.runLater(() -> {
-            String a = s.toString();
-            DecimalFormat df_dist = new DecimalFormat("###,###,###");
-            DecimalFormat df_angle_dir = new DecimalFormat("#.###");
-            guiController.txtDir.setText(a + String.valueOf(df_angle_dir.format(l.get(0))));
-            guiController.txtDist.setText(a + String.valueOf(df_dist.format(l.get(1))));
-            guiController.txtLon.setText(a + String.valueOf(df_angle_dir.format(weapon.getLongitude())) + " lon");
-            guiController.txtLat.setText(a + String.valueOf(df_angle_dir.format(weapon.getLatitude())) + " lat");
+            guiController.setDirection(l.get(0));
+            guiController.setDistance(l.get(1));
+            guiController.setLongitude(weapon.getLongitude());
+            guiController.setLatitude(weapon.getLatitude());
         });
     }
 
@@ -331,9 +324,9 @@ public class AppLogicController {
         MapPoint secondCornerPoint = poiLayersData.getDownloadCornerPoints().get(1);
         try {
             ImageRetriever.downloadSelectedSquareToCacheFolder(firstCornerPoint, secondCornerPoint);
-            displayMessage("Downloading...", true);
+            displayMessage("Downloading...");
         } catch (IllegalAccessException e) {
-            displayMessage("No access to file system.", true);
+            displayMessage("No access to file system.");
         }
     }
 
@@ -342,29 +335,22 @@ public class AppLogicController {
         if (channel != null) {
             return channel.isWritable();
         } else {
-            displayMessage("No connection!", true);
+            displayMessage("No connection!");
             return false;
         }
     }
 
-    public void displayMessage(String msg, boolean clearBefore) {
-        if (clearBefore) {
-            guiController.txtInfo.clear();
-            guiController.txtInfo.setText(msg);
-        } else {
-            guiController.txtInfo.setText(guiController.txtInfo.getText() + "\n" + msg);
-            guiController.txtInfo.selectPositionCaret(guiController.txtInfo.getLength());
-            guiController.txtInfo.deselect();
-        }
+    public void displayMessage(String msg) {
+        guiController.setInfo(msg);
     }
 
     void connectTo() {
-        displayMessage("Connecting to...", true);
+        displayMessage("Connecting to...");
         client.establishConnection("127.0.0.1", "8007"); //Will run the client in a new thread
     }
 
     void createHeadQuarter() {
-        displayMessage("Creating server...", true);
+        displayMessage("Creating server...");
         client.createServer("8007");
     }
 
@@ -372,7 +358,7 @@ public class AppLogicController {
         this.client = client;
     }
 
-    public void setGuiController(JfxGuiController guiController) {
+    public void setGuiController(GUIController guiController) {
         this.guiController = guiController;
     }
 }

@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-public class NetworkDuplexClient {
+public class NetworkDuplexClient implements MyNetworkClient {
     private static final Logger logger = Logger.getLogger(NetworkDuplexClient.class.getName());
     private final String secretWord = "uebanskie_uebani"; // the needed bit length keyword used in the both client and server
     private Cipher encodecipher, decodecipher;
@@ -58,22 +58,34 @@ public class NetworkDuplexClient {
         }
     }
 
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public ArrayList<Channel> getChannels() {
+        return channels;
+    }
+
+    @Override
     public void establishConnection(String host, String port) {
         this.host = System.getProperty("host", host);
         this.port = Integer.parseInt(System.getProperty("port", port));
         es.submit(this::bootStrapConnection); // Run in a new thread
     }
 
+    @Override
     public void createServer(String port) {
         this.port = Integer.parseInt(System.getProperty("port", port));
         es.submit(this::bootStrapServer);
     }
 
-    public void pushCommandPointTo(MapPoint point, ChannelHandlerContext channelContext) {
-        channelContext.channel().writeAndFlush(point);
-        Platform.runLater(() -> applicationLogic.displayMessage("Point pushed.", false));
+    @Override
+    public void pushCommandPointTo(MapPoint point, Object channelContext) {
+        ((ChannelHandlerContext) channelContext).channel().writeAndFlush(point);
+        Platform.runLater(() -> applicationLogic.displayMessage("Point pushed."));
     }
 
+    @Override
     public void spreadPointAmongSpotters(MapPoint point) {
         channels.forEach(chan -> chan.writeAndFlush(point, chan.voidPromise()));
     }
@@ -133,19 +145,11 @@ public class NetworkDuplexClient {
             channel.closeFuture().sync();
         } catch (Exception e) {
             e.printStackTrace();
-            applicationLogic.displayMessage("No connection!", true);
+            applicationLogic.displayMessage("No connection!");
         } finally {
             channel = null;
             group.shutdownGracefully();
         }
-    }
-
-    public Channel getChannel() {
-        return channel;
-    }
-
-    public ArrayList<Channel> getChannels() {
-        return channels;
     }
 
     // Class implementing channel actions
@@ -153,7 +157,7 @@ public class NetworkDuplexClient {
     private class MyDuplexHandler extends ChannelDuplexHandler {
         @Override
         public void channelActive(ChannelHandlerContext ctx) {
-            applicationLogic.displayMessage("Channel active!", false);
+            applicationLogic.displayMessage("Channel active!");
         }
 
         @Override
@@ -193,7 +197,7 @@ public class NetworkDuplexClient {
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
             cause.printStackTrace();
-            applicationLogic.displayMessage("Connection broken!", true);
+            applicationLogic.displayMessage("Connection broken!");
             channel = null;
             ctx.close();
         }

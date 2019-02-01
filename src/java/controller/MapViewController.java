@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 import static javafx.scene.paint.Color.RED;
 
 /**
- * This is the top UI element of the MAP component. Useful only in JavaFX desktop applications. Uses specific JavaFX Region class methods and Java listeners.
+ * This is the top UI element of the MAP component. Useful only in JavaFX desktop applications. Uses specific JavaFX Region class methods, Java listeners and BaseMap.
  */
 public class MapViewController extends Region {
     private BaseMap baseMap;
@@ -266,8 +266,8 @@ public class MapViewController extends Region {
                     List<Double> l = poiLayersData.getWeaponsAdjustmentsMap().get(pair.getKey());
                     if (l != null && !l.isEmpty()) {
                         Platform.runLater(() -> {
-                            guiController.setDirection(String.valueOf(l.get(0)));
-                            guiController.setDistance(String.valueOf(l.get(1)));
+                            guiController.setDirection(l.get(0));
+                            guiController.setDistance(l.get(1));
                         });
                     }
                 }
@@ -374,7 +374,7 @@ public class MapViewController extends Region {
             double y = y_deg * 111120; //111120 м - средняя длина одного градуса широты
             double c = Math.round(Math.sqrt(x * x + y * y));
             int ci = ((int) c);
-            guiController.setDistance(String.valueOf(ci));
+            guiController.setDistance(ci);
             // Next will show the direction on selected point, first we need to define in what quarter the target is displaced
             boolean right = false;
             boolean up = false;
@@ -397,10 +397,10 @@ public class MapViewController extends Region {
                 angle = 270 + a;
             }
             if (ci == 0) angle = 0;
-            guiController.setDirection(String.valueOf(angle));
+            guiController.setDirection(angle);
         }
-        guiController.setLongitude(String.valueOf(selected_deg.getLongitude()));
-        guiController.setLatitude(String.valueOf(selected_deg.getLatitude()));
+        guiController.setLongitude(selected_deg.getLongitude());
+        guiController.setLatitude(selected_deg.getLatitude());
     }
 
     boolean isPointSelected() {

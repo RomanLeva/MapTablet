@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.Optional;
 
 // Useful only in JavaFX applications, uses its specific methods. Works in pair only with MapView controller.
-public class JfxGuiController implements GUIController{
+public class JfxGuiController implements GUIController {
     public Button btnLaser;
     public Button btnTriangul;
     public Button btnMyposition;
@@ -286,7 +286,7 @@ public class JfxGuiController implements GUIController{
 
     public void clickLine() {
         if (!mapViewController.isSelectingLine()) {
-            appLogicController.displayMessage("Select two line points,\n than push LINE button.", true);
+            setInfo("Select two line points,\n than push LINE button.");
             if (poiLayersData.getTempPointLayer().getPoints().size() != 0)
                 poiLayersData.getTempPointLayer().deleteTempPoint();
             btnLine.setSelected(true);
@@ -302,9 +302,14 @@ public class JfxGuiController implements GUIController{
                 poiLayersData.getLinesLayer().addLine(poiLayersData.getLineStartEndPoints().get(0), poiLayersData.getLineStartEndPoints().get(1), Color.RED);
             } catch (IndexOutOfBoundsException e) {
                 poiLayersData.getLineStartEndPoints().clear();
-                appLogicController.displayMessage("", true);
+                setInfo("");
             }
         }
+    }
+
+    @Override
+    public void setReadyFire(boolean readyFire) {
+        mapViewController.readyFire = readyFire;
     }
 
     public void setMapViewController(MapViewController view) {
@@ -323,13 +328,13 @@ public class JfxGuiController implements GUIController{
     }
 
     @Override
-    public void setLatitude(String latitude) {
-        txtLat.setText(latitude + " lat");
+    public void setLatitude(double latitude) {
+        txtLat.setText(String.valueOf(latitude) + " lat");
     }
 
     @Override
-    public void setLongitude(String longitude) {
-        txtLon.setText(longitude + " lon");
+    public void setLongitude(double longitude) {
+        txtLon.setText(String.valueOf(longitude) + " lon");
     }
 
     @Override
@@ -338,22 +343,27 @@ public class JfxGuiController implements GUIController{
     }
 
     @Override
-    public void setDirection(String direction) {
+    public void setDirection(double direction) {
         DecimalFormat df_angle_dir = new DecimalFormat("#.###");
 //        df_angle_dir.setRoundingMode(RoundingMode.CEILING);
-        txtDir.setText(df_angle_dir.format(direction) + "\u00b0");
+        txtDir.setText(String.valueOf(df_angle_dir.format(direction)) + "\u00b0");
     }
 
     @Override
-    public void setDistance(String distance) {
+    public void setDistance(double distance) {
         DecimalFormat df_dist = new DecimalFormat("###,###,###");
-        txtDist.setText(df_dist.format(distance) + " m");
+        txtDist.setText(String.valueOf(df_dist.format(distance)) + " m");
     }
+
     @Override
-    public void setInfo(String info){
+    public void setInfo(String info) {
         txtInfo.setText(info);
+        txtInfo.selectPositionCaret(txtInfo.getLength());
+        txtInfo.deselect();
     }
-    public void eraseFields(){
+
+    @Override
+    public void eraseFields() {
         txtInfo.setText("");
         txtDist.setText("");
         txtDir.setText("");
