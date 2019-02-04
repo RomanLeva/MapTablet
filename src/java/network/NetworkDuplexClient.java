@@ -80,8 +80,12 @@ public class NetworkDuplexClient implements MyNetworkClient {
     }
 
     @Override
-    public void pushCommandPointByChannel(MapPoint point, Object channelContext) {
-        ((ChannelHandlerContext) channelContext).channel().writeAndFlush(point);
+    public void pushCommandPointByChannel(MapPoint point, Object channel) {
+        if (channel instanceof ChannelHandlerContext){
+            ((ChannelHandlerContext) channel).channel().writeAndFlush(point, ((ChannelHandlerContext) channel).voidPromise());
+        } else if (channel instanceof Channel){
+            ((Channel) channel).writeAndFlush(point, ((Channel) channel).voidPromise());
+        }
         Platform.runLater(() -> applicationLogic.displayMessage("Point pushed."));
     }
 
@@ -104,7 +108,7 @@ public class NetworkDuplexClient implements MyNetworkClient {
                         @Override
                         public void initChannel(SocketChannel ch) {
                             try {
-                                channels.add(ch); // Every connected client is in channels list. Server will response by this channels.
+                                channels.add(ch); // Every connected client (or lower HeadQuarter) is in channels list. Server will response by this channels.
                                 ChannelPipeline p = ch.pipeline();
                                 p.addLast(
                                         encoder,
@@ -143,7 +147,7 @@ public class NetworkDuplexClient implements MyNetworkClient {
                                     myDuplexHandler);
                         }
                     });
-            channel = b.connect(host, port).sync().channel();
+            channel = b.connect(host, port).sync().channel(); // Channel to upper HeadQuarters
             channel.closeFuture().sync();
         } catch (Exception e) {
             e.printStackTrace();
@@ -194,6 +198,11 @@ public class NetworkDuplexClient implements MyNetworkClient {
             } catch (IllegalBlockSizeException | BadPaddingException e) {
                 e.printStackTrace();
             }
+        }
+
+        @Override
+        public void channelUnregistered(ChannelHandlerContext ctx) {
+            channels.remove(ctx.channel());
         }
 
         @Override

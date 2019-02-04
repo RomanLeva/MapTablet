@@ -156,30 +156,31 @@ public class MapViewController extends Region {
             } else if (selectingLine) { // Create two point for line
                 switch (poiLayersData.getLineStartEndPoints().size()) {
                     case 0:
+                        poiLayersData.getTempPointLayer().deleteTempPoint();
                         if (!t.getTarget().equals(this)) {
-                            selectPoint(t);
+                            selectLinePoint(t);
                             poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
                         } else {
-                            createNewPoint(t);
+                            Circle c = new Circle(7, Color.YELLOW);
+                            poiLayersData.getTempPointLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), c);
                             poiLayersData.getLineStartEndPoints().add(poiLayersData.getTempPointLayer().getPoints().getFirst().getKey());
-                            poiLayersData.getTempPointLayer().deleteTempPoint();
                         }
                         break;
                     case 1:
+                        poiLayersData.getTempPointLayer().deleteTempPoint();
                         if (!t.getTarget().equals(this)) {
-                            selectPoint(t);
+                            selectLinePoint(t);
                             poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
                         } else {
-                            createNewPoint(t);
+                            Circle c = new Circle(7, Color.YELLOW);
+                            poiLayersData.getTempPointLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), c);
                             poiLayersData.getLineStartEndPoints().add(poiLayersData.getTempPointLayer().getPoints().getFirst().getKey());
                         }
-                        poiLayersData.setFocusedPair(new Pair<>(null, null));
-                        poiLayersData.getTempPointLayer().deleteTempPoint();
                         break;
                     case 2:
-                        poiLayersData.getLineStartEndPoints().clear();
+                        poiLayersData.getLineStartEndPoints().clear(); // Repeats creating two line points...
                         if (!t.getTarget().equals(this)) {
-                            selectPoint(t);
+                            selectLinePoint(t);
                             poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
                         } else {
                             createNewPoint(t);
@@ -220,7 +221,7 @@ public class MapViewController extends Region {
     }
 
     //Erase selected and temporary points, make point color back as it was before
-    private void refreshSelection() {
+    void refreshSelection() {
         if (!poiLayersData.getTempPointLayer().getPoints().isEmpty()) {
             poiLayersData.getTempPointLayer().deleteTempPoint();
         }
@@ -236,12 +237,29 @@ public class MapViewController extends Region {
     private void selectLine(MouseEvent t) {
         refreshSelection();
         Optional<Pair<Pair<MapPoint, MapPoint>, Node>> op = poiLayersData.getLinesLayer().getLines().stream().filter(pair -> pair.getValue() == t.getTarget()).findFirst();
-        op.ifPresent(pairNodePair -> {
+            op.ifPresent(pairNodePair -> {
             if (((Shape) pairNodePair.getValue()).getStroke().equals(Color.BLACK) | ((Shape) pairNodePair.getValue()).getStroke().equals(Color.ORANGE))
                 return;
             poiLayersData.setFocusedLine(((Line) pairNodePair.getValue()));
             ((Shape) pairNodePair.getValue()).setStroke(Color.BLUE);
         });
+    }
+
+    private void selectLinePoint(MouseEvent t){
+        refreshSelection();
+        for (MapLayer layer : poiLayersData.getLayers()) {
+            if (layer instanceof LinesLayer) continue;
+            Optional<Pair<MapPoint, Node>> op = ((PointsLayer) layer).getPoints().stream().filter(pair -> pair.getValue() == t.getTarget()).findFirst();
+            if (op.isPresent()) {
+                Pair<MapPoint, Node> pair = op.get();
+                focusedColor = ((Shape) pair.getValue()).getFill();
+                poiLayersData.setFocusedPair(pair);
+                isPointSelected = true;
+                ((Shape) pair.getValue()).setFill(Color.BLUE);
+                showDistanceToSelectedPoint();
+                break;
+            }
+        }
     }
 
     private void selectPoint(MouseEvent t) {

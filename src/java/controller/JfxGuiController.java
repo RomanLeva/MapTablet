@@ -10,6 +10,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import javafx.util.Pair;
@@ -50,6 +51,7 @@ public class JfxGuiController implements GUIController {
     private PoiLayersData poiLayersData;
     private int targetMaxIndex, targetNextIndex = 0;
     private boolean somethingPressed = false;
+    private DecimalFormat df_coord_dir = new DecimalFormat("#.###");
 
     public void clickTarget() {
         if (somethingPressed) return;
@@ -57,7 +59,7 @@ public class JfxGuiController implements GUIController {
             if (mapViewController.readyFire) { // Point is not selected by mouse, but selected by buttons << >>.
                 ((MapPoint) poiLayersData.getFocusedPair().getKey()).setCommand(MapPoint.Commands.FIRE);
                 btnTarget.setText("WORK");
-                appLogicController.processIncomingMessage(((MapPoint) poiLayersData.getFocusedPair().getKey()), null);
+                appLogicController.processUserInputMessage(((MapPoint) poiLayersData.getFocusedPair().getKey()));
             } else { // Create new target point and pin it on the map.
                 if (poiLayersData.getTempPointLayer().getPoints().isEmpty()) return;
                 MapPoint t = poiLayersData.getTempPointLayer().getPoints().get(0).getKey();
@@ -68,12 +70,12 @@ public class JfxGuiController implements GUIController {
                 poiLayersData.setFocusedPair(poiLayersData.getTargetPointsLayer().getPoints().getFirst());
                 ((Shape) poiLayersData.getTargetPointsLayer().getPoints().getFirst().getValue()).setFill(Color.BLUE);
                 mapViewController.setPointSelected(true);
-                appLogicController.processIncomingMessage(t, null);
+                appLogicController.processUserInputMessage(t);
             }
         } else if (mapViewController.readyFire) { // Point is selected by mouse and ready to be strafed.
             ((MapPoint) poiLayersData.getFocusedPair().getKey()).setCommand(MapPoint.Commands.FIRE);
             btnTarget.setText("WORK");
-            appLogicController.processIncomingMessage(((MapPoint) poiLayersData.getFocusedPair().getKey()), null);
+            appLogicController.processUserInputMessage(((MapPoint) poiLayersData.getFocusedPair().getKey()));
         }
     }
 
@@ -98,7 +100,15 @@ public class JfxGuiController implements GUIController {
         Pair p = poiLayersData.getFocusedPair();
         for (MapLayer poiLayer : poiLayersData.getLayers()) {
             if (poiLayer instanceof LinesLayer) { // Line was selected
-                continue; //TODO deleting lines
+                if (poiLayersData.getFocusedLine().getStroke().equals(Color.BLUE)) {
+                    Line l = poiLayersData.getFocusedLine();
+                    Optional<Pair<Pair<MapPoint, MapPoint>, Node>> op = poiLayersData.getLinesLayer().getLines().stream().filter(pair -> pair.getValue() == l).findFirst();
+                    op.ifPresent(pairNodePair -> {
+                        poiLayersData.getLinesLayer().getLines().remove(pairNodePair);
+                        ((Shape) op.get().getValue()).setStroke(Color.TRANSPARENT);
+                        op.get().getValue().setVisible(false);
+                    });
+                } else break;
             } else if (poiLayer instanceof PointsLayer) { // Point was selected
                 Optional op = ((PointsLayer) poiLayer).getPoints().stream().filter(mapPointNodePair -> mapPointNodePair == p).findFirst();
                 if (op.isPresent()) {
@@ -106,11 +116,10 @@ public class JfxGuiController implements GUIController {
                     MapPoint t = (MapPoint) pp.getKey();
                     t.setCommand(MapPoint.Commands.DESTROYED);
                     if (!((pp.getValue()) instanceof Polygon)) { // don't send triangular point
-                        appLogicController.processIncomingMessage(t, null);
+                        appLogicController.processUserInputMessage(t);
                     } else {
                         ((Shape) pp.getValue()).setFill(Color.TRANSPARENT);
                         ((Shape) pp.getValue()).setVisible(false);
-                        ((PointsLayer) poiLayer).getPoints().remove(pp);
                     }
                     poiLayersData.setFocusedPair(new Pair<>(null, null));
                     mapViewController.setPointSelected(false);
@@ -123,13 +132,13 @@ public class JfxGuiController implements GUIController {
     public void clickMissed() {
         if (mapViewController.isPointSelected() && ((MapPoint) poiLayersData.getFocusedPair().getKey()).getCommand().equals(MapPoint.Commands.FIRE)) {
             if (!mapViewController.isSelectingMissed()) {
+                somethingPressed = true;
                 mapViewController.setSelectingMissed(true);
                 btnMissed.setSelected(true);
-                somethingPressed = true;
             } else {
+                somethingPressed = false;
                 mapViewController.setSelectingMissed(false);
                 btnMissed.setSelected(false);
-                somethingPressed = false;
                 appLogicController.processAdjustments();
                 poiLayersData.getMissedPointsLayer().getPoints().forEach(pair -> {
                     ((Shape) pair.getValue()).setFill(Color.TRANSPARENT);
@@ -228,16 +237,16 @@ public class JfxGuiController implements GUIController {
     }
 
     public void clickConnect() {
-        appLogicController.usedAsClient = true;
+        appLogicController.usedAsHQ = false;
         appLogicController.connectTo();
     }
 
     public void clickCreate() {
-        appLogicController.usedAsClient = false;
+        appLogicController.usedAsHQ = true;
         appLogicController.createHeadQuarter();
     }
 
-    public void clickLaser(ActionEvent actionEvent) {
+    public void clickLaser() {
         if (somethingPressed) return;
         // Use laser rangefinder, compass and your position point on the map to mark a landmark.
     }
@@ -286,12 +295,13 @@ public class JfxGuiController implements GUIController {
 
     public void clickLine() {
         if (!mapViewController.isSelectingLine()) {
-            setInfo("Select two line points,\n than push LINE button.");
+            setInfo("Select two line points,\n than press LINE again.");
             if (poiLayersData.getTempPointLayer().getPoints().size() != 0)
                 poiLayersData.getTempPointLayer().deleteTempPoint();
             btnLine.setSelected(true);
             somethingPressed = true;
             mapViewController.setSelectingLine(true);
+            poiLayersData.getLineStartEndPoints().clear();
         } else {
             btnLine.setSelected(false);
             somethingPressed = false;
@@ -300,10 +310,14 @@ public class JfxGuiController implements GUIController {
                 poiLayersData.getTempPointLayer().deleteTempPoint();
             try {
                 poiLayersData.getLinesLayer().addLine(poiLayersData.getLineStartEndPoints().get(0), poiLayersData.getLineStartEndPoints().get(1), Color.RED);
-            } catch (IndexOutOfBoundsException e) {
+            } catch (IndexOutOfBoundsException | NullPointerException e) {
                 poiLayersData.getLineStartEndPoints().clear();
-                setInfo("");
+                mapViewController.refreshSelection();
+                setInfo("Repeat line.");
+                return;
             }
+            mapViewController.refreshSelection();
+            setInfo("Line created.");
         }
     }
 
@@ -329,12 +343,14 @@ public class JfxGuiController implements GUIController {
 
     @Override
     public void setLatitude(double latitude) {
-        txtLat.setText(String.valueOf(latitude) + " lat");
+        df_coord_dir.setRoundingMode(RoundingMode.CEILING);
+        txtLat.setText(String.valueOf(df_coord_dir.format(latitude)) + " lat");
     }
 
     @Override
     public void setLongitude(double longitude) {
-        txtLon.setText(String.valueOf(longitude) + " lon");
+        df_coord_dir.setRoundingMode(RoundingMode.CEILING);
+        txtLon.setText(String.valueOf(df_coord_dir.format(longitude)) + " lon");
     }
 
     @Override
@@ -344,9 +360,8 @@ public class JfxGuiController implements GUIController {
 
     @Override
     public void setDirection(double direction) {
-        DecimalFormat df_angle_dir = new DecimalFormat("#.###");
-//        df_angle_dir.setRoundingMode(RoundingMode.CEILING);
-        txtDir.setText(String.valueOf(df_angle_dir.format(direction)) + "\u00b0");
+        df_coord_dir.setRoundingMode(RoundingMode.CEILING);
+        txtDir.setText(String.valueOf(df_coord_dir.format(direction)) + "\u00b0");
     }
 
     @Override
