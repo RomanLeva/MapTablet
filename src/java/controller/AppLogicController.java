@@ -14,7 +14,6 @@ import javafx.util.Pair;
 import maps.*;
 import network.NetworkDuplexClient;
 
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -61,7 +60,7 @@ public class AppLogicController {
                             processNewTarget(point, weapon); // Response to gun from your department, do all the calculations!
                         } else {
                             targetChannelMap.put(point, channelContext);
-                            client.pushCommandPointTo(point, channelContext); // Response to other client
+                            client.pushCommandPointByChannel(point, channelContext); // Response to other client
                         }
                     } else { // No near weapon in your department.
                         spreadPoint(point, channelContext);
@@ -72,7 +71,7 @@ public class AppLogicController {
                     } else {
                         MapPoint n = new MapPoint(0, 0);
                         n.setCommand(MapPoint.Commands.NOWEAPON);
-                        client.pushCommandPointTo(n, channelContext); // Response to other client
+                        client.pushCommandPointByChannel(n, channelContext); // Response to other client
                     }
                 }
                 break;
@@ -90,7 +89,7 @@ public class AppLogicController {
             }
             case FIRE: {
                 if (channelContext == null & targetChannelMap.containsKey(point)) {
-                    client.pushCommandPointTo(point, targetChannelMap.get(point));
+                    client.pushCommandPointByChannel(point, targetChannelMap.get(point));
                     break;
                 }
                 Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
@@ -129,11 +128,11 @@ public class AppLogicController {
             if (usedAsClient & client.getChannel() != null) {
                 client.getChannel().writeAndFlush(point, client.getChannel().voidPromise()); // Push the new target to the Head quarters ! Inside the HQ it will spread among others if needed.
             } else
-                client.spreadPointAmongSpotters(point); // Target created by user input, spread it among other clients.
+                client.spreadPointAmongOthers(point); // Target created by user input, spread it among other clients.
         } else {
             MapPoint p = new MapPoint(0, 0);
             p.setCommand(MapPoint.Commands.NOWEAPON);
-            client.pushCommandPointTo(p, context); // Send NOWEAPON response back, they will decide what to do.
+            client.pushCommandPointByChannel(p, context); // Send NOWEAPON response back, they will decide what to do.
         }
     }
 
@@ -161,7 +160,7 @@ public class AppLogicController {
         mapPoint.setId(currentTargetID);
         MapPoint focusedTarg = ((MapPoint) poiLayersData.getFocusedPair().getKey());
         if (targetChannelMap.containsKey(focusedTarg)) {
-            client.pushCommandPointTo(mapPoint, targetChannelMap.get(focusedTarg));
+            client.pushCommandPointByChannel(mapPoint, targetChannelMap.get(focusedTarg));
         } else processIncomingMessage(mapPoint, null);
     }
 
@@ -181,7 +180,7 @@ public class AppLogicController {
         Optional<Pair<MapPoint, Node>> ot = poiLayersData.getTargetPointsLayer().getPoints().stream().filter(p ->
                 p.getKey().getLatitude() == selected.getLatitude() & p.getKey().getLongitude() == selected.getLongitude()).findFirst();
         if (ot.isPresent()) { // target point was selected
-            if (targetChannelMap.containsKey(point)) client.pushCommandPointTo(point, targetChannelMap.get(point));
+            if (targetChannelMap.containsKey(point)) client.pushCommandPointByChannel(point, targetChannelMap.get(point));
             if (targetWeaponMap.containsKey(selected)) {
                 Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
                         l.getKey().getValue().getLatitude() == selected.getLatitude() & l.getKey().getValue().getLongitude() == selected.getLongitude()).findFirst();
@@ -346,12 +345,12 @@ public class AppLogicController {
 
     void connectTo() {
         displayMessage("Connecting to...");
-        client.establishConnection("127.0.0.1", "8007"); //Will run the client in a new thread
+        client.connectToHeadQuarters("127.0.0.1", "8007"); //Will run the client in a new thread
     }
 
     void createHeadQuarter() {
         displayMessage("Creating server...");
-        client.createServer("8007");
+        client.createHeadQuarters("8007");
     }
 
     public void setClient(NetworkDuplexClient client) {

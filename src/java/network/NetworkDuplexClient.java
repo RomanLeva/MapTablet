@@ -67,29 +67,31 @@ public class NetworkDuplexClient implements MyNetworkClient {
     }
 
     @Override
-    public void establishConnection(String host, String port) {
+    public void connectToHeadQuarters(String host, String port) {
         this.host = System.getProperty("host", host);
         this.port = Integer.parseInt(System.getProperty("port", port));
         es.submit(this::bootStrapConnection); // Run in a new thread
     }
 
     @Override
-    public void createServer(String port) {
+    public void createHeadQuarters(String port) {
         this.port = Integer.parseInt(System.getProperty("port", port));
         es.submit(this::bootStrapServer);
     }
 
     @Override
-    public void pushCommandPointTo(MapPoint point, Object channelContext) {
+    public void pushCommandPointByChannel(MapPoint point, Object channelContext) {
         ((ChannelHandlerContext) channelContext).channel().writeAndFlush(point);
         Platform.runLater(() -> applicationLogic.displayMessage("Point pushed."));
     }
 
     @Override
-    public void spreadPointAmongSpotters(MapPoint point) {
+    public void spreadPointAmongOthers(MapPoint point) {
         channels.forEach(chan -> chan.writeAndFlush(point, chan.voidPromise()));
+        Platform.runLater(() -> applicationLogic.displayMessage("Points pushed."));
     }
 
+    // Creates server from bootstrap
     private void bootStrapServer() {
         logger.info("Initiating server...");
         try {
@@ -102,7 +104,7 @@ public class NetworkDuplexClient implements MyNetworkClient {
                         @Override
                         public void initChannel(SocketChannel ch) {
                             try {
-                                channels.add(ch);
+                                channels.add(ch); // Every connected client is in channels list. Server will response by this channels.
                                 ChannelPipeline p = ch.pipeline();
                                 p.addLast(
                                         encoder,
@@ -113,9 +115,9 @@ public class NetworkDuplexClient implements MyNetworkClient {
                             }
                         }
                     });
-            // Bind to port number and start to accept incoming connections.
-            b.bind(port).sync().channel().closeFuture().sync();
+            b.bind(port).sync().channel().closeFuture().sync();// Bind to port number and start to accept incoming connections.
         } catch (Exception e) {
+            applicationLogic.displayMessage("No connection!");
             e.printStackTrace();
         } finally {
             bossGroup.shutdownGracefully();
