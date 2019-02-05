@@ -42,15 +42,10 @@ public class AppLogicController {
                 if (!weapon.getCommand().equals(MapPoint.Commands.NOWEAPON)) { // Watch is this weapon is near enough to fire.
                     weaponReady(point, weapon);
                     targetChannelMap.put(point, channelContext);
-                    client.pushCommandPointByChannel(point, channelContext); // Response to other client
-                } else { // Any weapon in your dept.
-                    if (channelContext == null) {
-                        spreadPoint(point, null);
-                    } else {
-                        MapPoint n = new MapPoint(0, 0);
-                        n.setCommand(MapPoint.Commands.NOWEAPON);
-                        client.pushCommandPointByChannel(n, channelContext); // Response to other client
-                    }
+                    client.pushCommandPointByChannel(point, channelContext); // Response to spotter client READY command
+                } else { // Any weapon in your department, send point to others.
+                    point.setCommand(MapPoint.Commands.NOWEAPON);
+                    client.pushCommandPointByChannel(point, channelContext); // Response to spotter client NOWEAPON command
                 }
                 break;
             }
@@ -88,7 +83,6 @@ public class AppLogicController {
                     ot.ifPresent(mapPointNodePair -> {
                         mapPointNodePair.getKey().setCommand(MapPoint.Commands.READY);
                         mapPointNodePair.getKey().setId(point.getId());
-                        targetChannelMap.put(mapPointNodePair.getKey(), channelContext);
                     });
                     MapPoint current = ((MapPoint) poiLayersData.getFocusedPair().getKey());
                     if (current != null && current.getLatitude() == point.getLatitude() & current.getLongitude() == point.getLongitude()) {
@@ -120,11 +114,14 @@ public class AppLogicController {
                 break;
             }
             case ADJUSTMENT: {
-                calculateAdjustments(point);
+                if (!usedAsHQ) {
+                    client.pushCommandPointByChannel(point, client.getChannel());
+                } else calculateAdjustments(point);
                 break;
             }
             case DESTROYED: {
                 Platform.runLater(() -> destroyPoint(point));
+                if (!usedAsHQ)client.pushCommandPointByChannel(point, client.getChannel());
                 break;
             }
             case STOP: {
@@ -134,7 +131,12 @@ public class AppLogicController {
                 Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
                         l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
                 lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
-                // Next, push here the command directly to the cannoneer from your department... somehow.
+                if (!usedAsHQ){
+                    client.pushCommandPointByChannel(point, client.getChannel());
+                } else {
+                    displayMessage("Fire!");
+                    // Push here the command directly to the cannoneer from your department... somehow.
+                }
                 break;
             }
             case READY: {
@@ -176,7 +178,7 @@ public class AppLogicController {
         }
     }
 
-    private void weaponReady(MapPoint target, MapPoint weapon){
+    private void weaponReady(MapPoint target, MapPoint weapon) {
         weapon.setCommand(MapPoint.Commands.BUSY);
         target.setCommand(MapPoint.Commands.READY);
         targetWeaponMap.put(target, weapon);
@@ -246,6 +248,7 @@ public class AppLogicController {
                         MapPoint w = targetWeaponMap.get(selected);
                         w.setCommand(MapPoint.Commands.READY);
                         targetWeaponMap.remove(selected);
+                        guiController.setInfo("Target destroyed.");
                     }
                 }
                 Optional ow = poiLayersData.getWeaponPointsLayer().getPoints().stream().filter(p ->
@@ -277,9 +280,8 @@ public class AppLogicController {
     private synchronized MapPoint nearestGunToTarget(MapPoint target) {
         ArrayDeque<MapPoint> wp = new ArrayDeque<>(1);
         ArrayDeque<Double> dis = new ArrayDeque<>(1);
-        Optional<Pair<MapPoint, Node>> op = poiLayersData.getWeaponPointsLayer().getPoints().stream().filter(p -> p.getKey().getCommand().equals(MapPoint.Commands.READY)).findFirst();
-        if (op.isPresent()) {
-            MapPoint weapon = op.get().getKey();
+        poiLayersData.getWeaponPointsLayer().getPoints().stream().filter(p -> p.getKey().getCommand().equals(MapPoint.Commands.READY)).forEach(p -> {
+            MapPoint weapon = p.getKey();
             if (wp.isEmpty()) {
                 wp.add(weapon);
                 dis.add(distance(weapon, target));
@@ -292,7 +294,7 @@ public class AppLogicController {
                     dis.add(nextDist);
                 }
             }
-        }
+        });
         if (!dis.isEmpty() && dis.getFirst() <= 300000) { // 300 km //TODO
             return wp.getFirst();
         } else {

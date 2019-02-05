@@ -14,7 +14,7 @@ public class LinesLayer extends MapLayer {
 
     public void addLine(MapPoint start, MapPoint end, Color color) {
         Line line = new Line();
-        line.setStrokeWidth(2);
+        line.setStrokeWidth(3);
         Point2D s = baseMap.getMapPointFromDegreesToXY(start.getLatitude(), start.getLongitude());
         Point2D e = baseMap.getMapPointFromDegreesToXY(end.getLatitude(), end.getLongitude());
         line.setStartX(s.getX());

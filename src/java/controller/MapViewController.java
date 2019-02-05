@@ -76,6 +76,7 @@ public class MapViewController extends Region {
     // Register mouse events on map view node, creating or selecting points
     private void registerInputListeners() {
         setOnMousePressed(t -> {
+            guiController.eraseFields();
             manageLayerObject = true;
             if (zooming) return;
             baseMap.setX0(t.getX());
@@ -294,6 +295,7 @@ public class MapViewController extends Region {
                 isPointSelected = true;
                 ((Shape) pair.getValue()).setFill(Color.BLUE);
                 showDistanceToSelectedPoint();
+                break;
             }
         }
     }
@@ -376,7 +378,6 @@ public class MapViewController extends Region {
 
     // Show distance between point only if you have your position point and put (or select) another point on map
     void showDistanceToSelectedPoint() {
-        guiController.eraseFields();
         MapPoint selected_deg;
         if (isPointSelected) {
             selected_deg = ((MapPoint) poiLayersData.getFocusedPair().getKey());
@@ -384,6 +385,7 @@ public class MapViewController extends Region {
             selected_deg = poiLayersData.getTempPointLayer().getPoints().getFirst().getKey();
         }
         if (!poiLayersData.getMyPosPointLayer().getPoints().isEmpty()) {
+            guiController.setInfo("Distance from you.");
             MapPoint myPos_deg = poiLayersData.getMyPosPointLayer().getPoints().getFirst().getKey();
             double x_deg = Math.abs(myPos_deg.getLongitude() - selected_deg.getLongitude());
             double mid = (myPos_deg.getLatitude() + selected_deg.getLatitude()) / 2;

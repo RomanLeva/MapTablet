@@ -46,6 +46,8 @@ public class JfxGuiController implements GUIController {
     public BorderPane borderPane;
     public BorderPane pane;
     public ToggleButton btnLine;
+    public Button btnGun;
+    public Button btnMark;
     private MapViewController mapViewController; // default controller for onMap actions
     private AppLogicController appLogicController; // controller of entire app logic and decisions
     private PoiLayersData poiLayersData;
@@ -238,11 +240,13 @@ public class JfxGuiController implements GUIController {
 
     public void clickConnect() {
         appLogicController.usedAsHQ = false;
+        btnGun.setDisable(true);
         appLogicController.connectTo();
     }
 
     public void clickCreate() {
         appLogicController.usedAsHQ = true;
+        btnGun.setDisable(false);
         appLogicController.createHeadQuarter();
     }
 
