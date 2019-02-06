@@ -48,6 +48,10 @@ public class JfxGuiController implements GUIController {
     public ToggleButton btnLine;
     public Button btnGun;
     public Button btnMark;
+    public Button btnUnit;
+    public Button btnCreate;
+    public ToggleButton btnAim;
+    public ToggleButton btnMove;
     private MapViewController mapViewController; // default controller for onMap actions
     private AppLogicController appLogicController; // controller of entire app logic and decisions
     private PoiLayersData poiLayersData;
@@ -325,6 +329,14 @@ public class JfxGuiController implements GUIController {
         }
     }
 
+    public void clickAim() {
+        setInfo("Not implemented yet.");
+    }
+
+    public void clickMove() {
+        setInfo("Not implemented yet.");
+    }
+
     @Override
     public void setReadyFire(boolean readyFire) {
         mapViewController.readyFire = readyFire;
@@ -342,7 +354,8 @@ public class JfxGuiController implements GUIController {
         this.appLogicController = appLogicController;
     }
 
-    public void clickUnit(ActionEvent actionEvent) {
+    public void clickUnit() {
+        setInfo("Not implemented yet.");
     }
 
     @Override

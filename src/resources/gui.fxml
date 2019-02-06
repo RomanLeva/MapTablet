@@ -145,6 +145,16 @@
                   <Font name="System Bold" size="14.0" />
                </font>
             </Button>
+            <ToggleButton fx:id="btnAim" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickAim" text="AIM" textFill="#e8ae00" GridPane.columnIndex="9">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </ToggleButton>
+            <ToggleButton fx:id="btnMove" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" mnemonicParsing="false" onAction="#clickMove" text="MOVE" textFill="#12a805" GridPane.columnIndex="9" GridPane.rowIndex="1">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </ToggleButton>
          </children>
       </GridPane>
    </top>
