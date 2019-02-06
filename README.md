@@ -5,4 +5,3 @@ A commander can simply pin a target point on the map, application will select th
 and so, for units there will apear a mark point. 
 JavaFX platform was choosed for offline working and connecting to some equipment by USB. Application uses auto cached or downloaded OpenStreetMap tiles. All messages are encrypted.
 Application uses localhost and port 8007. Launch one or more apps one machine, push the HEAD button to work as Head, and push the SPOT button for connecting MapTablet to work as a Spotter. Normal networking will be implemented some later.
-Tile rendering by Gluonmaps open source project, ALL the other functionallity developed by me.
