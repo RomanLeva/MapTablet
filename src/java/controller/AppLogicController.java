@@ -383,7 +383,7 @@ public class AppLogicController {
         MapPoint firstCornerPoint = poiLayersData.getDownloadCornerPoints().get(0);
         MapPoint secondCornerPoint = poiLayersData.getDownloadCornerPoints().get(1);
         try {
-            ImageRetriever.downloadSelectedSquareToCacheFolder(firstCornerPoint, secondCornerPoint);
+            ImageDownloader.downloadSelectedSquareToCacheFolder(firstCornerPoint, secondCornerPoint);
             displayMessage("Downloading...");
         } catch (IllegalAccessException e) {
             displayMessage("No access to file system.");

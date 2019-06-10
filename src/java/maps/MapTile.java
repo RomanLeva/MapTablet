@@ -1,13 +1,10 @@
 package maps;
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.WeakInvalidationListener;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Region;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Logger;
 
 class MapTile extends Region {
@@ -25,7 +22,7 @@ class MapTile extends Region {
         this.j = j;
         ImageView iv = new ImageView();
         iv.setMouseTransparent(true);
-        this.progress = ImageRetriever.fillImage(iv, myZoom, i, j);
+        this.progress = ImageDownloader.fillImage(iv, myZoom, i, j);
         getChildren().addAll(iv); // Add tile image to JFX Node to be rendered
         this.progress.addListener(o -> { // Each map tile has it's loading progress, if progress becomes 1 -> requestNextPulse() from the JFX Parent to redraw its child Nodes
             if (this.progress.get() == 1.) {
