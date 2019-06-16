@@ -7,6 +7,11 @@ import javafx.scene.layout.Region;
 
 import java.util.logging.Logger;
 
+/**
+ * MapTile class is extending Region that can be added as child to Group (class that represents nodes container).
+ * Animation pulse (JFX thread) will draw each Group's child after it will be requested.
+ * It will be requested after adding new point, scrolling or zooming.
+ */
 class MapTile extends Region {
     private static final Logger logger = Logger.getLogger(MapTile.class.getName());
     private final int myZoom;
@@ -47,7 +52,6 @@ class MapTile extends Region {
 
     private void calculatePosition() {
         this.setVisible(baseMap.zoom().get() == myZoom);
-        logger.fine("visible tile " + this + "? " + this.isVisible() + (this.isVisible() ? " covering? " : ""));
         setTranslateX(256 * i); // each tile is 256 pixels, setTranslate will move the tile from upper left corner of the parent Node to 256*X
         setTranslateY(256 * j);
     }

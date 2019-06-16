@@ -16,16 +16,13 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.*;
 import javafx.util.Duration;
 import javafx.util.Pair;
-import maps.LinesLayer;
+import data.LinesLayer;
 import maps.BaseMap;
 import maps.MapLayer;
-import maps.PointsLayer;
+import data.PointsLayer;
 
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 import static javafx.scene.paint.Color.RED;
 
@@ -53,8 +50,10 @@ public class MapViewController extends Region {
     public MapViewController(BaseMap baseMap, PoiLayersData poiLayersData) {
         this.baseMap = baseMap;
         this.poiLayersData = poiLayersData;
-        getChildren().add(baseMap);
-        poiLayersData.getLayers().forEach(l -> this.getChildren().add(l));
+        getChildren().add(baseMap); // Add basemap object to JFX Parent (The base class for all nodes that have children in the scene graph),
+        // than animation pulse can invoke layoutChildren() method of each child to redraw it. In base map it will cause tile loading.
+        poiLayersData.getLayers().forEach(l -> this.getChildren().add(l)); // Add layers to JFX Parent too. In layers layoutChildren() will invoke layoutLayer() that will do some
+        //recalculations, set translate property of its nodes and so on.
         registerInputListeners();
         baseMap.centerLat().addListener(o -> markDirty());
         baseMap.centerLon().addListener(o -> markDirty());
@@ -221,7 +220,9 @@ public class MapViewController extends Region {
 //        }
     }
 
-    //Erase selected and temporary points, make point color back as it was before
+    /**
+     * Erase selected and temporary points, make point color back as it was before
+     */
     void refreshSelection() {
         if (!poiLayersData.getTempPointLayer().getPoints().isEmpty()) {
             poiLayersData.getTempPointLayer().deleteTempPoint();
@@ -319,7 +320,10 @@ public class MapViewController extends Region {
         baseMap.setZoom(zoom);
     }
 
-    //Request the map to position itself around the specified center
+    /**
+     * Request the map to position itself around the specified center
+     * @param mapPoint
+     */
     void setCenter(MapPoint mapPoint) {
         setCenter(mapPoint.getLatitude(), mapPoint.getLongitude());
     }
@@ -333,7 +337,10 @@ public class MapViewController extends Region {
         return baseMap.getMapPointFromDegreesToXY(centerPoint.getLatitude(), centerPoint.getLongitude());
     }
 
-    //Wait a bit, then move to the specified mapPoint in seconds time
+    /**
+     * Wait a bit, then move to the specified mapPoint in seconds time
+     * @param mapPoint
+     */
     void flyTo(MapPoint mapPoint) {
         if ((timeline != null) && (timeline.getStatus() == Status.RUNNING)) {
             timeline.stop();
@@ -350,13 +357,17 @@ public class MapViewController extends Region {
 
     private boolean dirty = false;
 
-    // Causes redrawing of map when it was scrolled
+    /**
+     * Causes redrawing of map when it was scrolled
+     */
     private void markDirty() {
         dirty = true;
         this.setNeedsLayout(true);
     }
 
-    // Causes redrawing of points layers when it was changed
+    /**
+     * Causes redrawing of points and lines layers when it was changed. Used by JFX animation thread
+     */
     @Override
     public void layoutChildren() {
         final double w = getWidth();
@@ -366,7 +377,6 @@ public class MapViewController extends Region {
                 layer.layoutLayer();
             }
         }
-        super.layoutChildren();
         dirty = false;
         // we need to get these values or we won't be notified on new changes
         baseMap.centerLon().get();
@@ -376,7 +386,9 @@ public class MapViewController extends Region {
         clip.setHeight(h);
     }
 
-    // Show distance between point only if you have your position point and put (or select) another point on map
+    /**
+     * Show distance between point only if you have your position point and put (or select) another point on map
+     */
     void showDistanceToSelectedPoint() {
         MapPoint selected_deg;
         if (isPointSelected) {

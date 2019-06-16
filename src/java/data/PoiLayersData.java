@@ -4,10 +4,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Pair;
-import maps.LinesLayer;
 import maps.BaseMap;
 import maps.MapLayer;
-import maps.PointsLayer;
 
 import java.util.*;
 // Class that is used by all the others classes. Represents state of collections for all users.

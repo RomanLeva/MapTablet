@@ -1,15 +1,12 @@
-package maps;
-import data.MapPoint;
+package data;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.util.Pair;
+import maps.MapLayer;
 
 import java.util.LinkedList;
 import java.util.Optional;
 
-/**
- * A layer that allows to visualise points of interest.
- */
 public class PointsLayer extends MapLayer {
     private LinkedList<Pair<MapPoint, Node>> points = new LinkedList<>();
     private static Pair<MapPoint, Node> lastUsedPoint;
@@ -22,7 +19,9 @@ public class PointsLayer extends MapLayer {
         this.markDirty();
     }
 
-    //  Method used only in temporary layer with one point
+    /**
+     * Method used only in temporary layer with one point
+     */
     public void deleteTempPoint() {
         //selects only exactly tempPoint from all Nodes in Region
         try {
@@ -35,15 +34,17 @@ public class PointsLayer extends MapLayer {
         }
     }
 
-    //Перерисовует точки когда двигается экран
+    /**
+     * Rewrite points when screen is moving, method is invoked in parent MapLayer class by JFX animation pulse
+     */
     @Override
     public void layoutLayer() {
-        for (Pair<MapPoint, Node> candidate : points) {
-            MapPoint point = candidate.getKey();
-            Node icon = candidate.getValue();
+        for (Pair<MapPoint, Node> p : points) {
+            MapPoint point = p.getKey();
+            Node icon = p.getValue();
             Point2D mapPoint = baseMap.getMapPointFromDegreesToXY(point.getLatitude(), point.getLongitude());
             icon.setVisible(true);
-//            Задает смещение иконки точки
+            // Set point shifting
             icon.setTranslateX(mapPoint.getX());
             icon.setTranslateY(mapPoint.getY());
         }

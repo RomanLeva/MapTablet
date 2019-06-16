@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-public class NetworkDuplexClient implements MyNetworkClient {
+public class NetworkDuplexClient implements NetworkClient {
     private static final Logger logger = Logger.getLogger(NetworkDuplexClient.class.getName());
     private final String secretWord = "uebanskie_uebani"; // the needed bit length keyword used in the both client and server
     private Cipher encodecipher, decodecipher;

@@ -1,6 +1,8 @@
 package controller;
+import data.LinesLayer;
 import data.MapPoint;
 import data.PoiLayersData;
+import data.PointsLayer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import javafx.application.Platform;

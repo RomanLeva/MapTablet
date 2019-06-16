@@ -75,7 +75,11 @@ public class BaseMap extends Group {
         this.sceneProperty().addListener(sceneListener);
     }
 
-    //Move the center of this map to the specified coordinates
+    /**
+     * Move the center of this map to the specified coordinates
+     * @param lat
+     * @param lon
+     */
     public void setCenter(double lat, double lon) {
         prefCenterLat.set(lat);
         prefCenterLon.set(lon);
@@ -209,7 +213,12 @@ public class BaseMap extends Group {
         return new MapPoint(lat, lon);
     }
 
-    // Used for tile addressing when downloading the selected region
+    /**
+     * Used for tile addressing when downloading the selected region
+     * @param point
+     * @param zoom
+     * @return
+     */
     public long[] getTileNumberFromMapPoint(MapPoint point, double zoom) {
         long[] tn = new long[2];
         long n = (long) Math.pow(2, zoom); // n - is number of tiles in current zoom level
@@ -272,7 +281,8 @@ public class BaseMap extends Group {
                 if ((ref == null) || (ref.get() == null)) {
                     MapTile tile = new MapTile(this, (int) zoom.get(), i, j); //Create tiles, they will be downloaded from file or network when created
                     tiles[(int) zoom.get()].put(key, new SoftReference<>(tile));
-                    getChildren().add(tile);
+                    getChildren().add(tile); //Here JFX Group (class representing nodes container)
+                    // adds its children, than animation thread will use each of child to draw.
                 } else {
                     MapTile tile = ref.get();
                     if (!getChildren().contains(tile)) {
@@ -313,7 +323,6 @@ public class BaseMap extends Group {
             }
         }
         getChildren().removeAll(toRemove);
-        logger.fine("DONE CLEANUP " + getChildren().size());
     }
 
     private void clearTiles() {
@@ -331,7 +340,7 @@ public class BaseMap extends Group {
     }
 
     /**
-     * Called by the JavaFX Application Thread when a pulse is running.
+     * Called by the JavaFX Application Thread when a animation pulse is running.
      * In case the dirty flag has been set, we know that something has changed
      * and we need to reload/clean the tiles.
      */
@@ -341,7 +350,6 @@ public class BaseMap extends Group {
             loadTiles();
             dirty = false;
         }
-        super.layoutChildren();
     }
 
     private void calculateCenterCoords() {
@@ -370,7 +378,7 @@ public class BaseMap extends Group {
         this.dirty = true;
         calculateCenterCoords();
         this.setNeedsLayout(true);
-        Toolkit.getToolkit().requestNextPulse();
+        Toolkit.getToolkit().requestNextPulse(); //This animation pulse will invoke layoutChildren() method of each child from Group's children list
     }
 
     private double getMyWidth() {

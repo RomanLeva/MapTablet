@@ -1,12 +1,11 @@
-package maps;
-import data.MapPoint;
+package data;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.util.Pair;
+import maps.MapLayer;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class LinesLayer extends MapLayer {
@@ -29,11 +28,11 @@ public class LinesLayer extends MapLayer {
     // Used in redrawing lines after scrolling or zooming.
     @Override
     public void layoutLayer() {
-        for (Pair<Pair<MapPoint, MapPoint>, Node> candidate : lines) { // Redraw lines
-            Pair<MapPoint, MapPoint> p = candidate.getKey();
+        for (Pair<Pair<MapPoint, MapPoint>, Node> ln : lines) { // Redraw lines
+            Pair<MapPoint, MapPoint> p = ln.getKey();
             Point2D sp = baseMap.getMapPointFromDegreesToXY(p.getKey().getLatitude(), p.getKey().getLongitude());
             Point2D ep = baseMap.getMapPointFromDegreesToXY(p.getValue().getLatitude(), p.getValue().getLongitude());
-            Line line = ((Line) candidate.getValue());
+            Line line = ((Line) ln.getValue());
             line.setStartX(sp.getX());
             line.setStartY(sp.getY());
             line.setEndX(ep.getX());

@@ -24,18 +24,10 @@ public class ImageDownloader {
             System.setProperty("http.agent", "Chrome");
             String home = System.getProperty("user.home");
             File storageRoot = new File(home, ".maptablet");
-            if (!storageRoot.isDirectory()) {
-                boolean b = storageRoot.mkdirs();
-                if (!b) throw new IOException("File system is not available");
-            }
             cacheRoot = new File(storageRoot, ".maps");
-            if (!cacheRoot.isDirectory()) {
-                hasFileCache = cacheRoot.mkdirs();
-            } else {
-                hasFileCache = true;
-            }
+            hasFileCache = true;
             logger.info("Available for downloading map tiles");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             hasFileCache = false;
             logger.log(Level.SEVERE, null, ex);
         }

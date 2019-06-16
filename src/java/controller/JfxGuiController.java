@@ -1,7 +1,6 @@
 package controller;
 import data.MapPoint;
 import data.PoiLayersData;
-import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
@@ -14,9 +13,9 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import javafx.util.Pair;
-import maps.LinesLayer;
+import data.LinesLayer;
 import maps.MapLayer;
-import maps.PointsLayer;
+import data.PointsLayer;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
