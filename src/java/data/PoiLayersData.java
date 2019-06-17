@@ -3,6 +3,7 @@ import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.util.Pair;
 import maps.BaseMap;
 import maps.MapLayer;
@@ -49,6 +50,8 @@ public class PoiLayersData {
         rectangle.setStroke(Color.BLACK); // border
         rectangle.getStrokeDashArray().add(5.0);
     }
+
+
 
     public PointsLayer getTargetPointsLayer() {
         return targetPointsLayer;

@@ -35,7 +35,11 @@ public class AppLogicController {
         this.poiLayersData = poiLayersData;
     }
 
-    // Main application logic method, all events from remote client are processing here!
+    /**
+     * Main application logic method, all events from remote client are processing here!
+     * @param point
+     * @param channelContext
+     */
     public synchronized void processIncomingMessage(MapPoint point, ChannelHandlerContext channelContext) {
         switch (point.getCommand()) {
             case TARGET: {
@@ -101,7 +105,10 @@ public class AppLogicController {
         }
     }
 
-    // Another main application logic method, all events from user input are processing here!
+    /**
+     * Another main application logic method, all events from user input are processing here!
+     * @param point
+     */
     protected void processUserInputMessage(MapPoint point) {
         switch (point.getCommand()) {
             case TARGET: {

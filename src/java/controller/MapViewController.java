@@ -28,6 +28,7 @@ import static javafx.scene.paint.Color.RED;
 
 /**
  * This is the top UI element of the MAP component. Useful only in JavaFX desktop applications. Uses specific JavaFX Region class methods, Java listeners and BaseMap.
+ * Used in pair with JFX GUI controller class.
  */
 public class MapViewController extends Region {
     private BaseMap baseMap;
@@ -39,6 +40,7 @@ public class MapViewController extends Region {
     private boolean manageLayerObject = true;
     private Paint focusedColor;
     private boolean isPointSelected;
+    private boolean selectingAim = false;
     private boolean selectingMissed = false;
     private boolean selectingDownload = false;
     private boolean selectingLine = false;
@@ -123,84 +125,15 @@ public class MapViewController extends Region {
         setOnMouseReleased(t -> {
             enableDragging = false;
             if (selectingMissed) {//Mark missing points if button MISSED is pressed
-                Rectangle r = new Rectangle(10, 10, Color.YELLOW);
-                r.setLayoutX(-5);
-                r.setLayoutY(-5);
-                poiLayersData.getMissedPointsLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), r);
+                selectingMissed(t);
             } else if (selectingDownload) { // Over creating the rectangle for downloading region, swap corner points that it creates useful rectangle for downloading, firstXY always < secondXY
-                if (anchor2D.getX() <= t.getX() & anchor2D.getY() <= t.getY()) {
-                    MapPoint f = baseMap.getMapPointFromXYtoDegrees(anchor2D.getX(), anchor2D.getY());
-                    MapPoint s = baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY());
-                    poiLayersData.getDownloadCornerPoints().add(f); // add the first corner point
-                    poiLayersData.getDownloadCornerPoints().add(s); // second corner point of the selecting rectangle
-                } else if (anchor2D.getX() > t.getX() & anchor2D.getY() > t.getY()) {
-                    MapPoint f = baseMap.getMapPointFromXYtoDegrees(anchor2D.getX(), anchor2D.getY());
-                    MapPoint s = baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY());
-                    poiLayersData.getDownloadCornerPoints().add(s); // add the first corner point
-                    poiLayersData.getDownloadCornerPoints().add(f); // second corner point of the selecting rectangle
-                } else if (anchor2D.getX() > t.getX() & anchor2D.getY() <= t.getY()) {
-                    double x = anchor2D.getX();
-                    anchor2D = new Point2D(t.getX(), anchor2D.getY());
-                    MapPoint f = baseMap.getMapPointFromXYtoDegrees(anchor2D.getX(), anchor2D.getY());
-                    MapPoint s = baseMap.getMapPointFromXYtoDegrees(x, t.getY());
-                    poiLayersData.getDownloadCornerPoints().add(f); // add the first corner point
-                    poiLayersData.getDownloadCornerPoints().add(s); // second corner point of the selecting rectangle
-                } else if (anchor2D.getX() <= t.getX() & anchor2D.getY() > t.getY()) {
-                    double y = anchor2D.getY();
-                    anchor2D = new Point2D(anchor2D.getX(), t.getY());
-                    MapPoint f = baseMap.getMapPointFromXYtoDegrees(anchor2D.getX(), anchor2D.getY());
-                    MapPoint s = baseMap.getMapPointFromXYtoDegrees(t.getX(), y);
-                    poiLayersData.getDownloadCornerPoints().add(f); // add the first corner point
-                    poiLayersData.getDownloadCornerPoints().add(s); // second corner point of the selecting rectangle
-                }
+                selectingDownload(t);
             } else if (selectingLine) { // Create two point for line
-                switch (poiLayersData.getLineStartEndPoints().size()) {
-                    case 0:
-                        poiLayersData.getTempPointLayer().deleteTempPoint();
-                        if (!t.getTarget().equals(this)) {
-                            selectLinePoint(t);
-                            poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
-                        } else {
-                            Circle c = new Circle(7, Color.YELLOW);
-                            poiLayersData.getTempPointLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), c);
-                            poiLayersData.getLineStartEndPoints().add(poiLayersData.getTempPointLayer().getPoints().getFirst().getKey());
-                        }
-                        break;
-                    case 1:
-                        poiLayersData.getTempPointLayer().deleteTempPoint();
-                        if (!t.getTarget().equals(this)) {
-                            selectLinePoint(t);
-                            poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
-                        } else {
-                            Circle c = new Circle(7, Color.YELLOW);
-                            poiLayersData.getTempPointLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), c);
-                            poiLayersData.getLineStartEndPoints().add(poiLayersData.getTempPointLayer().getPoints().getFirst().getKey());
-                        }
-                        break;
-                    case 2:
-                        poiLayersData.getLineStartEndPoints().clear(); // Repeats creating two line points...
-                        if (!t.getTarget().equals(this)) {
-                            selectLinePoint(t);
-                            poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
-                        } else {
-                            createNewPoint(t);
-                            poiLayersData.getLineStartEndPoints().add(poiLayersData.getTempPointLayer().getPoints().getFirst().getKey());
-                        }
-                        break;
-                    default:
-                        selectingLine = false;
-                        poiLayersData.getLineStartEndPoints().clear();
-                }
+                selectingLine(t);
+            } else if (selectingAim){
+                selectingAim(t);
             } else if (manageLayerObject) { // Do something with map event, it can be point/line selection or temporary point creation.
-                if (!t.getTarget().equals(this)) {
-                    if (t.getTarget() instanceof Line) {
-                        selectLine(t);
-                    } else if (t.getTarget() instanceof Circle | t.getTarget() instanceof Polygon) {
-                        selectPoint(t);
-                    }
-                } else {
-                    createNewPoint(t);
-                }
+                manageLayerObject(t);
             }
         });
         setOnZoomStarted(t -> {
@@ -218,6 +151,97 @@ public class MapViewController extends Region {
 //        if (Platform.isDesktop()) {
 //
 //        }
+    }
+
+    private void selectingAim(MouseEvent t) {
+    }
+
+    private void manageLayerObject(MouseEvent t){
+        if (!t.getTarget().equals(this)) {
+            if (t.getTarget() instanceof Line) {
+                selectLine(t);
+            } else if (t.getTarget() instanceof Circle | t.getTarget() instanceof Polygon) {
+                selectPoint(t);
+            }
+        } else {
+            createNewPoint(t);
+        }
+    }
+
+    private void selectingMissed(MouseEvent t) {
+        Rectangle r = new Rectangle(10, 10, Color.YELLOW);
+        r.setLayoutX(-5);
+        r.setLayoutY(-5);
+        poiLayersData.getMissedPointsLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), r);
+    }
+
+    private void selectingLine(MouseEvent t) {
+        switch (poiLayersData.getLineStartEndPoints().size()) {
+            case 0:
+                poiLayersData.getTempPointLayer().deleteTempPoint();
+                if (!t.getTarget().equals(this)) {
+                    selectLinePoint(t);
+                    poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
+                } else {
+                    Circle c = new Circle(7, Color.YELLOW);
+                    poiLayersData.getTempPointLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), c);
+                    poiLayersData.getLineStartEndPoints().add(poiLayersData.getTempPointLayer().getPoints().getFirst().getKey());
+                }
+                break;
+            case 1:
+                poiLayersData.getTempPointLayer().deleteTempPoint();
+                if (!t.getTarget().equals(this)) {
+                    selectLinePoint(t);
+                    poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
+                } else {
+                    Circle c = new Circle(7, Color.YELLOW);
+                    poiLayersData.getTempPointLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), c);
+                    poiLayersData.getLineStartEndPoints().add(poiLayersData.getTempPointLayer().getPoints().getFirst().getKey());
+                }
+                break;
+            case 2:
+                poiLayersData.getLineStartEndPoints().clear(); // Repeats creating two line points...
+                if (!t.getTarget().equals(this)) {
+                    selectLinePoint(t);
+                    poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
+                } else {
+                    createNewPoint(t);
+                    poiLayersData.getLineStartEndPoints().add(poiLayersData.getTempPointLayer().getPoints().getFirst().getKey());
+                }
+                break;
+            default:
+                selectingLine = false;
+                poiLayersData.getLineStartEndPoints().clear();
+        }
+    }
+    
+
+    private void selectingDownload(MouseEvent t){
+        if (anchor2D.getX() <= t.getX() & anchor2D.getY() <= t.getY()) {
+            MapPoint f = baseMap.getMapPointFromXYtoDegrees(anchor2D.getX(), anchor2D.getY());
+            MapPoint s = baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY());
+            poiLayersData.getDownloadCornerPoints().add(f); // add the first corner point
+            poiLayersData.getDownloadCornerPoints().add(s); // second corner point of the selecting rectangle
+        } else if (anchor2D.getX() > t.getX() & anchor2D.getY() > t.getY()) {
+            MapPoint f = baseMap.getMapPointFromXYtoDegrees(anchor2D.getX(), anchor2D.getY());
+            MapPoint s = baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY());
+            poiLayersData.getDownloadCornerPoints().add(s); // add the first corner point
+            poiLayersData.getDownloadCornerPoints().add(f); // second corner point of the selecting rectangle
+        } else if (anchor2D.getX() > t.getX() & anchor2D.getY() <= t.getY()) {
+            double x = anchor2D.getX();
+            anchor2D = new Point2D(t.getX(), anchor2D.getY());
+            MapPoint f = baseMap.getMapPointFromXYtoDegrees(anchor2D.getX(), anchor2D.getY());
+            MapPoint s = baseMap.getMapPointFromXYtoDegrees(x, t.getY());
+            poiLayersData.getDownloadCornerPoints().add(f); // add the first corner point
+            poiLayersData.getDownloadCornerPoints().add(s); // second corner point of the selecting rectangle
+        } else if (anchor2D.getX() <= t.getX() & anchor2D.getY() > t.getY()) {
+            double y = anchor2D.getY();
+            anchor2D = new Point2D(anchor2D.getX(), t.getY());
+            MapPoint f = baseMap.getMapPointFromXYtoDegrees(anchor2D.getX(), anchor2D.getY());
+            MapPoint s = baseMap.getMapPointFromXYtoDegrees(t.getX(), y);
+            poiLayersData.getDownloadCornerPoints().add(f); // add the first corner point
+            poiLayersData.getDownloadCornerPoints().add(s); // second corner point of the selecting rectangle
+        }
     }
 
     /**
@@ -477,5 +501,13 @@ public class MapViewController extends Region {
 
     public void setSelectingLine(boolean selectingLine) {
         this.selectingLine = selectingLine;
+    }
+
+    public boolean isSelectingAim() {
+        return selectingAim;
+    }
+
+    public void setSelectingAim(boolean selectingAim) {
+        this.selectingAim = selectingAim;
     }
 }
