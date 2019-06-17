@@ -45,13 +45,18 @@ public class MapViewController extends Region {
     private boolean selectingDownload = false;
     private boolean selectingLine = false;
     private PoiLayersData poiLayersData;
-    private GUIController guiController;
+    private JfxGuiController guiController;
     private Point2D anchor2D;
     boolean readyFire;
+    public enum ButtonType {
+        NONE, MISSED, DOWNLOAD, LINE
+    }
+    ButtonType buttonType;
 
     public MapViewController(BaseMap baseMap, PoiLayersData poiLayersData) {
         this.baseMap = baseMap;
         this.poiLayersData = poiLayersData;
+        buttonType = ButtonType.NONE;
         getChildren().add(baseMap); // Add basemap object to JFX Parent (The base class for all nodes that have children in the scene graph),
         // than animation pulse can invoke layoutChildren() method of each child to redraw it. In base map it will cause tile loading.
         poiLayersData.getLayers().forEach(l -> this.getChildren().add(l)); // Add layers to JFX Parent too. In layers layoutChildren() will invoke layoutLayer() that will do some
@@ -475,7 +480,7 @@ public class MapViewController extends Region {
         this.selectingMissed = selectingMissed;
     }
 
-    public void setGuiController(GUIController guiController) {
+    public void setGuiController(JfxGuiController guiController) {
         this.guiController = guiController;
     }
 

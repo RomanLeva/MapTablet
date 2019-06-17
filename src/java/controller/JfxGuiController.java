@@ -24,7 +24,7 @@ import java.util.Optional;
 /**
  * GUI controller useful only in JavaFX applications, uses its specific methods. Works in pair only with MapView controller class.
   */
-public class JfxGuiController implements GUIController {
+public class JfxGuiController {
     public Button btnLaser;
     public Button btnTriangul;
     public Button btnMyposition;
@@ -256,7 +256,6 @@ public class JfxGuiController implements GUIController {
     }
 
     public void clickLaser() {
-        if (somethingPressed) return;
         // Use laser rangefinder, compass and your position point on the map to mark a landmark.
     }
 
@@ -342,8 +341,7 @@ public class JfxGuiController implements GUIController {
         setInfo("Not implemented yet.");
     }
 
-    @Override
-    public void setReadyFire(boolean readyFire) {
+    void setReadyFire(boolean readyFire) {
         mapViewController.readyFire = readyFire;
     }
 
@@ -375,44 +373,37 @@ public class JfxGuiController implements GUIController {
         return (Shape) poiLayersData.getFocusedPair().getValue();
     }
 
-    @Override
-    public void setLatitude(double latitude) {
+    void setLatitude(double latitude) {
         df_coord_dir.setRoundingMode(RoundingMode.CEILING);
         txtLat.setText(String.valueOf(df_coord_dir.format(latitude)) + " lat");
     }
 
-    @Override
-    public void setLongitude(double longitude) {
+    void setLongitude(double longitude) {
         df_coord_dir.setRoundingMode(RoundingMode.CEILING);
         txtLon.setText(String.valueOf(df_coord_dir.format(longitude)) + " lon");
     }
 
-    @Override
-    public void setButtonText(String buttonText) {
+    void setButtonText(String buttonText) {
         btnTarget.setText(buttonText);
     }
 
-    @Override
-    public void setDirection(double direction) {
+    void setDirection(double direction) {
         df_coord_dir.setRoundingMode(RoundingMode.CEILING);
         txtDir.setText(String.valueOf(df_coord_dir.format(direction)) + "\u00b0");
     }
 
-    @Override
-    public void setDistance(double distance) {
+    void setDistance(double distance) {
         DecimalFormat df_dist = new DecimalFormat("###,###,###");
         txtDist.setText(String.valueOf(df_dist.format(distance)) + " m");
     }
 
-    @Override
-    public void setInfo(String info) {
+    void setInfo(String info) {
         txtInfo.setText(info);
         txtInfo.selectPositionCaret(txtInfo.getLength());
         txtInfo.deselect();
     }
 
-    @Override
-    public void eraseFields() {
+    void eraseFields() {
         txtInfo.setText("");
         txtDist.setText("");
         txtDir.setText("");

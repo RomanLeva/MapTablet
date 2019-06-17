@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AppLogicController {
     private NetworkDuplexClient client;
     boolean usedAsHQ = true; // false if used as server
-    private GUIController guiController;
+    private JfxGuiController guiController;
     private PoiLayersData poiLayersData;
     private Channel channel;
     private BaseMap baseMap;
@@ -109,7 +109,7 @@ public class AppLogicController {
      * Another main application logic method, all events from user input are processing here!
      * @param point
      */
-    protected void processUserInputMessage(MapPoint point) {
+    void processUserInputMessage(MapPoint point) {
         switch (point.getCommand()) {
             case TARGET: {
                 MapPoint weapon = nearestGunToTarget(point);// If there is a weapon in 30 km range, return it, else return special command point NOWEAPON
@@ -427,7 +427,7 @@ public class AppLogicController {
         this.client = client;
     }
 
-    public void setGuiController(GUIController guiController) {
+    public void setGuiController(JfxGuiController guiController) {
         this.guiController = guiController;
     }
 }
