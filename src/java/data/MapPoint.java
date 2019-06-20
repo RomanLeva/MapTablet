@@ -10,6 +10,10 @@ public class MapPoint implements Serializable {
         TARGET, READY, BUSY, FIRE, ACKNOWLEDGE, ADJUSTMENT, STOP, OVER, DESTROYED, NOWEAPON
     }
     private Commands command;
+    public enum PointType {
+        TARGET, GUN, MARK, TRIANG, UNIT, MYPOS
+    }
+    private PointType pointType;
 
     public MapPoint(@NamedArg("latitude") double lat, @NamedArg("longitude") double lon) {
         this.latitude = lat;
@@ -35,6 +39,14 @@ public class MapPoint implements Serializable {
 
     public void setCommand(Commands command) {
         this.command = command;
+    }
+
+    public PointType getPointType() {
+        return pointType;
+    }
+
+    public void setPointType(PointType pointType) {
+        this.pointType = pointType;
     }
 
     public long getId() {

@@ -51,7 +51,17 @@ public class PoiLayersData {
         rectangle.getStrokeDashArray().add(5.0);
     }
 
+    public MapPoint getTempPoint() {
+        return getTempPointLayer().getPoints().get(0).getKey();
+    }
 
+    public MapPoint getFocusedPoint() {
+        return (MapPoint) getFocusedPair().getKey();
+    }
+
+    public Shape getFocusedNode() {
+        return (Shape) getFocusedPair().getValue();
+    }
 
     public PointsLayer getTargetPointsLayer() {
         return targetPointsLayer;

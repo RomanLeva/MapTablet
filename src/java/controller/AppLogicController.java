@@ -37,6 +37,7 @@ public class AppLogicController {
 
     /**
      * Main application logic method, all events from remote client are processing here!
+     *
      * @param point
      * @param channelContext
      */
@@ -107,6 +108,7 @@ public class AppLogicController {
 
     /**
      * Another main application logic method, all events from user input are processing here!
+     *
      * @param point
      */
     void processUserInputMessage(MapPoint point) {
@@ -114,7 +116,7 @@ public class AppLogicController {
             case TARGET: {
                 MapPoint weapon = nearestGunToTarget(point);// If there is a weapon in 30 km range, return it, else return special command point NOWEAPON
                 if (!weapon.getCommand().equals(MapPoint.Commands.NOWEAPON)) { // Watch is this weapon is near enough to fire.
-                    newTarget(point, weapon); // Response to gun from your department, do all the calculations!
+                    aimWeaponOnTarget(point, weapon); // Response to gun from your department, do all the calculations!
                 } else { // No near weapon in your department. Push it to upper HeadQuarters if application used as spotter or local HQ.
                     if (!usedAsHQ) {
                         client.pushCommandPointByChannel(point, client.getChannel());
@@ -130,17 +132,20 @@ public class AppLogicController {
             }
             case DESTROYED: {
                 Platform.runLater(() -> destroyPoint(point));
-                if (!usedAsHQ)client.pushCommandPointByChannel(point, client.getChannel());
+                if (!usedAsHQ) client.pushCommandPointByChannel(point, client.getChannel());
                 break;
             }
             case STOP: {
                 break;
             }
             case FIRE: {
-                Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
-                        l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
-                lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
-                if (!usedAsHQ){
+//                Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo =
+                poiLayersData.getLinesLayer().getLines().stream().filter(l ->
+                        l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).forEach(l -> {
+                    ((Line) l.getValue()).setStroke(Color.ORANGE);
+                });
+//                lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
+                if (!usedAsHQ) {
                     client.pushCommandPointByChannel(point, client.getChannel());
                 } else {
                     displayMessage("Fire!");
@@ -159,6 +164,12 @@ public class AppLogicController {
         }
     }
 
+    /**
+     * Send this point to others
+     *
+     * @param point
+     * @param context
+     */
     private void spreadPoint(MapPoint point, ChannelHandlerContext context) {
         if (context == null) { // context == null if target created by the user input, else if came from network from an other spotter
             if (usedAsHQ & client.getChannel() != null) {
@@ -169,21 +180,6 @@ public class AppLogicController {
             MapPoint p = new MapPoint(0, 0);
             p.setCommand(MapPoint.Commands.NOWEAPON);
             client.pushCommandPointByChannel(p, context); // Send NOWEAPON response back, they will decide what to do.
-        }
-    }
-
-    private void newTarget(MapPoint target, MapPoint weapon) {
-        weapon.setCommand(MapPoint.Commands.BUSY);
-        target.setCommand(MapPoint.Commands.READY);
-        targetWeaponMap.put(target, weapon);
-        poiLayersData.getWeaponsAdjustmentsMap().put(weapon, new ArrayList<>());
-        calculateAiming(weapon, target);
-        Platform.runLater(() -> poiLayersData.getLinesLayer().addLine(weapon, target, Color.BLACK)); // Draw line between points
-        displayMessage("Gun ready!");
-        MapPoint current = ((MapPoint) poiLayersData.getFocusedPair().getKey());
-        if (current.getLatitude() == target.getLatitude() & current.getLongitude() == target.getLongitude()) {
-            guiController.setButtonText("FIRE!");
-            guiController.setReadyFire(true);
         }
     }
 
@@ -277,11 +273,73 @@ public class AppLogicController {
         }
     }
 
+    /**
+     * Aim weapon on that target!
+     *
+     * @param target
+     * @param weapon
+     */
+    void aimWeaponOnTarget(MapPoint target, MapPoint weapon) {
+        weapon.setCommand(MapPoint.Commands.BUSY);
+        target.setCommand(MapPoint.Commands.READY);
+        targetWeaponMap.put(target, weapon);
+        poiLayersData.getWeaponsAdjustmentsMap().put(weapon, new ArrayList<>());
+        calculateAiming(weapon, target);
+        Platform.runLater(() -> {
+            System.out.println("Line added");
+            poiLayersData.getLinesLayer().addLine(weapon, target, Color.BLACK);
+        }); // Draw line between points
+        displayMessage("Gun ready!");
+        MapPoint current = (poiLayersData.getFocusedPoint());
+        if (current.getLatitude() == target.getLatitude() & current.getLongitude() == target.getLongitude()) {
+            guiController.setButtonText("FIRE!");
+            guiController.setReadyFire(true);
+        }
+    }
+
+    void clearWeaponAiming(MapPoint weapon) {
+        System.out.println(weapon.toString());
+        List<MapPoint> pn = new ArrayList<>(1);
+        List<Pair<Pair<MapPoint, MapPoint>, Node>> ln = new ArrayList<>(1);
+        targetWeaponMap.forEach((t, w) -> {
+            System.out.println(t.toString() + " " + w.toString());
+            if (w.getLongitude() == weapon.getLongitude() & w.getLatitude() == weapon.getLatitude()) {
+                System.out.println("W = weap");
+                pn.add(t); // add target to remove list
+                t.setCommand(MapPoint.Commands.TARGET);
+//                Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo =
+                poiLayersData.getLinesLayer().getLines().stream().filter(l ->
+                        (l.getKey().getKey().getLatitude() == w.getLatitude() & l.getKey().getKey().getLongitude() == w.getLongitude())
+                                | (l.getKey().getValue().getLatitude() == w.getLatitude() & l.getKey().getValue().getLongitude() == w.getLongitude())).forEach(l -> {
+                    ln.add(l);
+                    poiLayersData.getWeaponsAdjustmentsMap().get(l.getKey().getKey()).clear();
+                    ((Line) l.getValue()).setStroke(Color.TRANSPARENT);
+                    l.getValue().setVisible(false);
+                });
+//                if (lo.isPresent()) { // delete line pointer if it was
+//                    System.out.println("Line is present");
+//                    Pair<Pair<MapPoint, MapPoint>, Node> lm = lo.get();
+//                    ln.add(lm);// add line to remove list
+//                    poiLayersData.getWeaponsAdjustmentsMap().get(lm.getKey().getKey()).clear();
+//                    ((Line) lm.getValue()).setStroke(Color.TRANSPARENT);
+//                    lm.getValue().setVisible(false);
+//                    poiLayersData.getLinesLayer().getLines().remove(lo.get());
+//                }
+            }
+        });
+        if (pn.size() > 0) {
+            targetWeaponMap.remove(pn.get(0)); //remove KV pair
+        } else System.out.println("T W is NOT present");
+        if (ln.size() > 0) {
+            poiLayersData.getLinesLayer().getLines().remove(ln.get(0));
+        } else System.out.println("Line is NOT present");
+    }
+
     private void createTargetPointOnMap(MapPoint point) {
-        ID.compareAndSet(Long.MAX_VALUE, 1);
+//        ID.compareAndSet(Long.MAX_VALUE, 1);
         point.setId(ID.getAndIncrement());
         Platform.runLater(() -> { // Draw circle on the map
-            Circle circle = new Circle(7, Color.RED);
+            Circle circle = new Circle(9, Color.RED);
             poiLayersData.getTargetPointsLayer().addPoint(point, circle);
         });
     }
@@ -313,7 +371,14 @@ public class AppLogicController {
         }
     }
 
-    private double distance(MapPoint weapon, MapPoint target) {
+    /**
+     * Measure distance between two points
+     *
+     * @param weapon
+     * @param target
+     * @return
+     */
+    double distance(MapPoint weapon, MapPoint target) {
         double x_deg = Math.abs(weapon.getLongitude() - target.getLongitude());
         double mid = (weapon.getLatitude() + target.getLatitude()) / 2;
         double x = x_deg * 111120 * Math.abs(Math.cos(Math.toRadians(mid))); //cos то шо на экваторе поворот вектора по Х на точку равен самому себе... , а ближе к полюсу вектор короче на cos(широты) ибо WSG-84

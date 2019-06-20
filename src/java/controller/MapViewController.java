@@ -37,7 +37,6 @@ public class MapViewController extends Region {
     private MapPoint centerPoint = null;
     private boolean zooming = false;
     private boolean enableDragging = false;
-    private boolean manageLayerObject = true;
     private Paint focusedColor;
     private boolean isPointSelected;
     private boolean selectingAim = false;
@@ -48,15 +47,10 @@ public class MapViewController extends Region {
     private JfxGuiController guiController;
     private Point2D anchor2D;
     boolean readyFire;
-    public enum ButtonType {
-        NONE, MISSED, DOWNLOAD, LINE
-    }
-    ButtonType buttonType;
 
     public MapViewController(BaseMap baseMap, PoiLayersData poiLayersData) {
         this.baseMap = baseMap;
         this.poiLayersData = poiLayersData;
-        buttonType = ButtonType.NONE;
         getChildren().add(baseMap); // Add basemap object to JFX Parent (The base class for all nodes that have children in the scene graph),
         // than animation pulse can invoke layoutChildren() method of each child to redraw it. In base map it will cause tile loading.
         poiLayersData.getLayers().forEach(l -> this.getChildren().add(l)); // Add layers to JFX Parent too. In layers layoutChildren() will invoke layoutLayer() that will do some
@@ -83,62 +77,69 @@ public class MapViewController extends Region {
     private void registerInputListeners() {
         setOnMousePressed(t -> {
             guiController.eraseFields();
-            manageLayerObject = true;
             if (zooming) return;
             baseMap.setX0(t.getX());
             baseMap.setY0(t.getY());
             centerPoint = null; // once the user starts moving, we don't track the center anymore.
             // dragging is enabled only after a pressed event, to prevent dragging right after zooming
             enableDragging = true;
-            if (selectingDownload) { // start creating the rectangle for downloading region
-                if (getChildren().contains(poiLayersData.rectangle)) {
-                    getChildren().remove(poiLayersData.rectangle);
-                    poiLayersData.rectangle.setWidth(0);
-                    poiLayersData.rectangle.setHeight(0);
-                }
-                poiLayersData.getDownloadCornerPoints().clear();
-                poiLayersData.rectangle.setX(t.getX());
-                poiLayersData.rectangle.setY(t.getY());
-                anchor2D = new Point2D(t.getX(), t.getY());
-                getChildren().add(poiLayersData.rectangle);
+            switch (guiController.buttonPressedType) {
+                case DOWNLOAD:
+                    if (getChildren().contains(poiLayersData.rectangle)) {
+                        getChildren().remove(poiLayersData.rectangle);
+                        poiLayersData.rectangle.setWidth(0);
+                        poiLayersData.rectangle.setHeight(0);
+                    }
+                    poiLayersData.getDownloadCornerPoints().clear();
+                    poiLayersData.rectangle.setX(t.getX());
+                    poiLayersData.rectangle.setY(t.getY());
+                    anchor2D = new Point2D(t.getX(), t.getY());
+                    getChildren().add(poiLayersData.rectangle);
+                    break;
             }
         });
         setOnMouseDragged(t -> {
-            if (selectingLine) return;
-            if (selectingDownload) {
-                double width = Math.abs(t.getX() - anchor2D.getX());
-                double height = Math.abs(t.getY() - anchor2D.getY());
-                long n = (long) Math.pow(2, baseMap.zoom().get()) * 2;
-                if (width > n) width = n;
-                if (height > n) height = n;
-                poiLayersData.rectangle.setWidth(width);
-                poiLayersData.rectangle.setHeight(height);
-                poiLayersData.rectangle.setX(Math.min(anchor2D.getX(), t.getX()));
-                poiLayersData.rectangle.setY(Math.min(anchor2D.getY(), t.getY()));
-                markDirty();
-            } else {
-                manageLayerObject = false;
-                if (zooming || !enableDragging) {
-                    return;
-                }
-                baseMap.moveX(baseMap.getX0() - t.getX());
-                baseMap.moveY(baseMap.getY0() - t.getY());
-                baseMap.setX0(t.getX());
-                baseMap.setY0(t.getY());
+            switch (guiController.buttonPressedType) {
+                case NONE:
+                    if (zooming || !enableDragging) {
+                        return;
+                    }
+                    baseMap.moveX(baseMap.getX0() - t.getX());
+                    baseMap.moveY(baseMap.getY0() - t.getY());
+                    baseMap.setX0(t.getX());
+                    baseMap.setY0(t.getY());
+                    break;
+                case DOWNLOAD:
+                    double width = Math.abs(t.getX() - anchor2D.getX());
+                    double height = Math.abs(t.getY() - anchor2D.getY());
+                    long n = (long) Math.pow(2, baseMap.zoom().get()) * 2;
+                    if (width > n) width = n;
+                    if (height > n) height = n;
+                    poiLayersData.rectangle.setWidth(width);
+                    poiLayersData.rectangle.setHeight(height);
+                    poiLayersData.rectangle.setX(Math.min(anchor2D.getX(), t.getX()));
+                    poiLayersData.rectangle.setY(Math.min(anchor2D.getY(), t.getY()));
+                    markDirty();
             }
         });
         setOnMouseReleased(t -> {
             enableDragging = false;
-            if (selectingMissed) {//Mark missing points if button MISSED is pressed
-                selectingMissed(t);
-            } else if (selectingDownload) { // Over creating the rectangle for downloading region, swap corner points that it creates useful rectangle for downloading, firstXY always < secondXY
-                selectingDownload(t);
-            } else if (selectingLine) { // Create two point for line
-                selectingLine(t);
-            } else if (selectingAim){
-                selectingAim(t);
-            } else if (manageLayerObject) { // Do something with map event, it can be point/line selection or temporary point creation.
-                manageLayerObject(t);
+            switch (guiController.buttonPressedType) {
+                case NONE:
+                    manageLayerObject(t); // Do something with map event, it can be point/line selection or temporary point creation.
+                    break;
+                case AIM:
+                    selectingAim(t);
+                    break;
+                case MISSED:
+                    selectingMissed(t); //Mark missing points if button MISSED is pressed
+                    break;
+                case DOWNLOAD:
+                    selectingDownload(t);  // Over creating the rectangle for downloading region, swap corner points that it creates useful rectangle for downloading, firstXY always < secondXY
+                    break;
+                case LINE:
+                    selectingLine(t);
+                    break;
             }
         });
         setOnZoomStarted(t -> {
@@ -159,9 +160,38 @@ public class MapViewController extends Region {
     }
 
     private void selectingAim(MouseEvent t) {
+        manageLayerObject(t);
+        try {
+            if (!isPointSelected() || !poiLayersData.getFocusedPoint().getPointType().equals(MapPoint.PointType.TARGET)) {
+                guiController.targSelected = false;
+                guiController.setInfo("Select target points only.");
+                return;
+            }
+            MapPoint target = poiLayersData.getFocusedPoint();
+            double d = distance(guiController.aimingWeapon, target);
+            if (d < 300000) { // Target in range //TODO 30 km
+                guiController.targSelected = true;
+                guiController.setInfo("Target selected.\nPress AIM to confirm.");
+            } else {
+                guiController.targSelected = false;
+                guiController.setInfo("Target is to far.");
+            }
+        } catch (Exception e) {
+            guiController.targSelected = false;
+            guiController.setInfo("Something wrong.\nReselect point.");
+        }
     }
 
-    private void manageLayerObject(MouseEvent t){
+    double distance(MapPoint weapon, MapPoint target) {
+        double x_deg = Math.abs(weapon.getLongitude() - target.getLongitude());
+        double mid = (weapon.getLatitude() + target.getLatitude()) / 2;
+        double x = x_deg * 111120 * Math.abs(Math.cos(Math.toRadians(mid))); //cos то шо на экваторе поворот вектора по Х на точку равен самому себе... , а ближе к полюсу вектор короче на cos(широты) ибо WSG-84
+        double y_deg = Math.abs(weapon.getLatitude() - target.getLatitude());
+        double y = y_deg * 111120; //111120 м - средняя длина одного градуса широты
+        return (double) Math.round(Math.sqrt(x * x + y * y));
+    }
+
+    private void manageLayerObject(MouseEvent t) {
         if (!t.getTarget().equals(this)) {
             if (t.getTarget() instanceof Line) {
                 selectLine(t);
@@ -186,7 +216,7 @@ public class MapViewController extends Region {
                 poiLayersData.getTempPointLayer().deleteTempPoint();
                 if (!t.getTarget().equals(this)) {
                     selectLinePoint(t);
-                    poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
+                    poiLayersData.getLineStartEndPoints().add(poiLayersData.getFocusedPoint());
                 } else {
                     Circle c = new Circle(7, Color.YELLOW);
                     poiLayersData.getTempPointLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), c);
@@ -197,7 +227,7 @@ public class MapViewController extends Region {
                 poiLayersData.getTempPointLayer().deleteTempPoint();
                 if (!t.getTarget().equals(this)) {
                     selectLinePoint(t);
-                    poiLayersData.getLineStartEndPoints().add(((MapPoint) poiLayersData.getFocusedPair().getKey()));
+                    poiLayersData.getLineStartEndPoints().add(poiLayersData.getFocusedPoint());
                 } else {
                     Circle c = new Circle(7, Color.YELLOW);
                     poiLayersData.getTempPointLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), c);
@@ -219,9 +249,8 @@ public class MapViewController extends Region {
                 poiLayersData.getLineStartEndPoints().clear();
         }
     }
-    
 
-    private void selectingDownload(MouseEvent t){
+    private void selectingDownload(MouseEvent t) {
         if (anchor2D.getX() <= t.getX() & anchor2D.getY() <= t.getY()) {
             MapPoint f = baseMap.getMapPointFromXYtoDegrees(anchor2D.getX(), anchor2D.getY());
             MapPoint s = baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY());
@@ -268,7 +297,7 @@ public class MapViewController extends Region {
     private void selectLine(MouseEvent t) {
         refreshSelection();
         Optional<Pair<Pair<MapPoint, MapPoint>, Node>> op = poiLayersData.getLinesLayer().getLines().stream().filter(pair -> pair.getValue() == t.getTarget()).findFirst();
-            op.ifPresent(pairNodePair -> {
+        op.ifPresent(pairNodePair -> {
             if (((Shape) pairNodePair.getValue()).getStroke().equals(Color.BLACK) | ((Shape) pairNodePair.getValue()).getStroke().equals(Color.ORANGE))
                 return;
             poiLayersData.setFocusedLine(((Line) pairNodePair.getValue()));
@@ -276,7 +305,7 @@ public class MapViewController extends Region {
         });
     }
 
-    private void selectLinePoint(MouseEvent t){
+    private void selectLinePoint(MouseEvent t) {
         refreshSelection();
         for (MapLayer layer : poiLayersData.getLayers()) {
             if (layer instanceof LinesLayer) continue;
@@ -333,7 +362,7 @@ public class MapViewController extends Region {
     private void createNewPoint(MouseEvent t) {
         isPointSelected = false;
         refreshSelection();
-        Circle c = new Circle(7, Color.GRAY);
+        Circle c = new Circle(9, Color.GRAY);
         poiLayersData.getTempPointLayer().addPoint(baseMap.getMapPointFromXYtoDegrees(t.getX(), t.getY()), c);
         showDistanceToSelectedPoint();
     }
@@ -351,13 +380,14 @@ public class MapViewController extends Region {
 
     /**
      * Request the map to position itself around the specified center
+     *
      * @param mapPoint
      */
-    void setCenter(MapPoint mapPoint) {
+    private void setCenter(MapPoint mapPoint) {
         setCenter(mapPoint.getLatitude(), mapPoint.getLongitude());
     }
 
-    void setCenter(double lat, double lon) {
+    private void setCenter(double lat, double lon) {
         this.centerPoint = new MapPoint(lat, lon);
         baseMap.setCenter(lat, lon);
     }
@@ -368,6 +398,7 @@ public class MapViewController extends Region {
 
     /**
      * Wait a bit, then move to the specified mapPoint in seconds time
+     *
      * @param mapPoint
      */
     void flyTo(MapPoint mapPoint) {
@@ -426,7 +457,7 @@ public class MapViewController extends Region {
             selected_deg = poiLayersData.getTempPointLayer().getPoints().getFirst().getKey();
         }
         if (!poiLayersData.getMyPosPointLayer().getPoints().isEmpty()) {
-            guiController.setInfo("Distance from you.");
+            guiController.setInfo("Distance and angle\nfrom you.");
             MapPoint myPos_deg = poiLayersData.getMyPosPointLayer().getPoints().getFirst().getKey();
             double x_deg = Math.abs(myPos_deg.getLongitude() - selected_deg.getLongitude());
             double mid = (myPos_deg.getLatitude() + selected_deg.getLatitude()) / 2;
@@ -464,6 +495,11 @@ public class MapViewController extends Region {
         guiController.setLatitude(selected_deg.getLatitude());
     }
 
+    /**
+     * Shows that user selects some point. If user selects one - that point become another color. If user creates new point, that point is NOT selected.
+     *
+     * @return
+     */
     boolean isPointSelected() {
         return isPointSelected;
     }
@@ -500,19 +536,19 @@ public class MapViewController extends Region {
         return baseMap;
     }
 
-    public boolean isSelectingLine() {
+    boolean isSelectingLine() {
         return selectingLine;
     }
 
-    public void setSelectingLine(boolean selectingLine) {
+    void setSelectingLine(boolean selectingLine) {
         this.selectingLine = selectingLine;
     }
 
-    public boolean isSelectingAim() {
+    boolean isSelectingAim() {
         return selectingAim;
     }
 
-    public void setSelectingAim(boolean selectingAim) {
+    void setSelectingAim(boolean selectingAim) {
         this.selectingAim = selectingAim;
     }
 }
