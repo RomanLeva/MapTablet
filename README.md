@@ -1,5 +1,5 @@
 # MapTablet
-<<project under construction>>
+==project under construction==
 Map tablet application for post service, emergency services and even artillery or mortar. The main idea that users can
 create theirs teams and watch synchronously theirs positions, exchange points, lines, commands and so on. 
 A commander can simply pin a target point on the map, application will select the nearest unit from your team and calculate for him coordinates, direction and distance to that target. Also, commander can select units and send them to any mark point on the map (like in StarCraft),
