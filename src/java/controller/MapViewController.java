@@ -39,10 +39,6 @@ public class MapViewController extends Region {
     private boolean enableDragging = false;
     private Paint focusedColor;
     private boolean isPointSelected;
-    private boolean selectingAim = false;
-    private boolean selectingMissed = false;
-    private boolean selectingDownload = false;
-    private boolean selectingLine = false;
     private PoiLayersData poiLayersData;
     private JfxGuiController guiController;
     private Point2D anchor2D;
@@ -191,6 +187,11 @@ public class MapViewController extends Region {
         return (double) Math.round(Math.sqrt(x * x + y * y));
     }
 
+    /**
+     * Method will decide what is selected.
+     *
+     * @param t
+     */
     private void manageLayerObject(MouseEvent t) {
         if (!t.getTarget().equals(this)) {
             if (t.getTarget() instanceof Line) {
@@ -245,7 +246,6 @@ public class MapViewController extends Region {
                 }
                 break;
             default:
-                selectingLine = false;
                 poiLayersData.getLineStartEndPoints().clear();
         }
     }
@@ -322,6 +322,11 @@ public class MapViewController extends Region {
         }
     }
 
+    /**
+     * Select point, put it to "focusedPair" in Poi layers data object. Maintain the point previous color and do some actions.
+     *
+     * @param t
+     */
     private void selectPoint(MouseEvent t) {
         refreshSelection();
         for (MapLayer layer : poiLayersData.getLayers()) {
@@ -508,14 +513,6 @@ public class MapViewController extends Region {
         isPointSelected = isSelected;
     }
 
-    boolean isSelectingMissed() {
-        return selectingMissed;
-    }
-
-    void setSelectingMissed(boolean selectingMissed) {
-        this.selectingMissed = selectingMissed;
-    }
-
     public void setGuiController(JfxGuiController guiController) {
         this.guiController = guiController;
     }
@@ -524,31 +521,7 @@ public class MapViewController extends Region {
         focusedColor = color;
     }
 
-    boolean isSelectingDownload() {
-        return selectingDownload;
-    }
-
-    void setSelectingDownload(boolean selectingDownload) {
-        this.selectingDownload = selectingDownload;
-    }
-
     BaseMap getBaseMap() {
         return baseMap;
-    }
-
-    boolean isSelectingLine() {
-        return selectingLine;
-    }
-
-    void setSelectingLine(boolean selectingLine) {
-        this.selectingLine = selectingLine;
-    }
-
-    boolean isSelectingAim() {
-        return selectingAim;
-    }
-
-    void setSelectingAim(boolean selectingAim) {
-        this.selectingAim = selectingAim;
     }
 }

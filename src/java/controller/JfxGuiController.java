@@ -67,7 +67,7 @@ public class JfxGuiController {
     public void clickTarget() {
         if (somethingPressed) return;
         if (!mapViewController.isPointSelected()) {
-            if (mapViewController.readyFire) { // Point is not selected by mouse, but selected by buttons << >>.
+            if (mapViewController.readyFire) { // Point is not selected by mouse, but selected by << >> buttons .
                 poiLayersData.getFocusedPoint().setCommand(MapPoint.Commands.FIRE);
                 btnTarget.setText("WORK");
                 appLogicController.processUserInputMessage(poiLayersData.getFocusedPoint());
@@ -93,17 +93,19 @@ public class JfxGuiController {
 
     public void clickDestroyed() {
         if (somethingPressed) return;
-        if (mapViewController.isSelectingMissed()) {
-            mapViewController.setSelectingMissed(false);
-            btnMissed.setSelected(false);
-            poiLayersData.getMissedPointsLayer().getPoints().forEach(pair -> {
-                ((Shape) pair.getValue()).setFill(Color.TRANSPARENT);
-                pair.getValue().setVisible(false);
-            });
-            poiLayersData.getMissedPointsLayer().getPoints().clear();
-            poiLayersData.setFocusedPair(new Pair<>(null, null));
-        } else {
-            clickDelete();
+        switch (buttonPressedType){
+            case NONE:
+                clickDelete();
+                break;
+            case MISSED:
+                btnMissed.setSelected(false);
+                poiLayersData.getMissedPointsLayer().getPoints().forEach(pair -> {
+                    ((Shape) pair.getValue()).setFill(Color.TRANSPARENT);
+                    pair.getValue().setVisible(false);
+                });
+                poiLayersData.getMissedPointsLayer().getPoints().clear();
+                poiLayersData.setFocusedPair(new Pair<>(null, null));
+                break;
         }
     }
 
@@ -242,7 +244,7 @@ public class JfxGuiController {
     }
 
     public void clickDownload() {
-        switch (buttonPressedType){
+        switch (buttonPressedType) {
             case NONE:
                 buttonPressedType = ButtonType.DOWNLOAD;
                 btnDownload.setSelected(true);
@@ -255,7 +257,6 @@ public class JfxGuiController {
                 appLogicController.selectToDownload();
                 break;
         }
-
     }
 
     public void clickConnect() {
@@ -319,7 +320,7 @@ public class JfxGuiController {
     }
 
     public void clickLine() {
-        switch (buttonPressedType){
+        switch (buttonPressedType) {
             case NONE:
                 setInfo("Select two line points,\n than press LINE again.");
                 if (poiLayersData.getTempPointLayer().getPoints().size() != 0)
@@ -352,6 +353,7 @@ public class JfxGuiController {
 
     public void clickAim() {
         if (!mapViewController.isPointSelected()) {
+            targSelected = false;
             resetButtons(btnAim);
             return;
         }
@@ -361,8 +363,8 @@ public class JfxGuiController {
                     buttonPressedType = ButtonType.AIM;
                     btnAim.setSelected(true);
                     somethingPressed = true;
-                    Optional<Pair<MapPoint, Node>> op = poiLayersData.getWeaponPointsLayer().getPoints().stream().filter(pair -> pair.getValue() == poiLayersData.getFocusedNode()).findFirst();
-                    op.ifPresent(mapPointNodePair -> aimingWeapon = mapPointNodePair.getKey());
+                    poiLayersData.getWeaponPointsLayer().getPoints().stream().filter(pair -> pair.getValue() == poiLayersData.getFocusedNode()).findFirst()
+                            .ifPresent(mapPointNodePair -> aimingWeapon = mapPointNodePair.getKey());
                     setInfo("Select target and than\n press AIM.");
                 } else {
                     resetButtons(btnAim);
@@ -372,16 +374,13 @@ public class JfxGuiController {
                 break;
             case AIM:
                 if (targSelected) {
-                    if (aimingWeapon.getCommand().equals(MapPoint.Commands.BUSY)){ // Re aim weapon
+                    if (aimingWeapon.getCommand().equals(MapPoint.Commands.BUSY))
                         appLogicController.clearWeaponAiming(aimingWeapon);
-                        appLogicController.aimWeaponOnTarget(poiLayersData.getFocusedPoint(), aimingWeapon);
-                        resetButtons(btnAim);
-                    } else {
-                        appLogicController.aimWeaponOnTarget(poiLayersData.getFocusedPoint(), aimingWeapon);
-                        resetButtons(btnAim);
-                    }
+                    appLogicController.aimWeaponOnTarget(poiLayersData.getFocusedPoint(), aimingWeapon);
+                    resetButtons(btnAim);
                 } else {
                     setInfo("Cancel.");
+//                    appLogicController.clearWeaponAiming(aimingWeapon);
                     targSelected = false;
                     resetButtons(btnAim);
                     break;
@@ -395,6 +394,7 @@ public class JfxGuiController {
 
     /**
      * Reset button view, reset something pressed boolean and pressed type to NONE
+     *
      * @param b
      */
     private void resetButtons(ToggleButton b) {
@@ -405,6 +405,7 @@ public class JfxGuiController {
 
     /**
      * Mark
+     *
      * @param readyFire
      */
     void setReadyFire(boolean readyFire) {
@@ -413,6 +414,7 @@ public class JfxGuiController {
 
     /**
      * Set map controller.
+     *
      * @param view
      */
     public void setMapViewController(MapViewController view) {
@@ -421,6 +423,7 @@ public class JfxGuiController {
 
     /**
      * Set poi layer container
+     *
      * @param poiLayersData
      */
     public void setPoiLayersData(PoiLayersData poiLayersData) {
@@ -429,6 +432,7 @@ public class JfxGuiController {
 
     /**
      * Set application logic controller that will do application calculations, decisions and so on.
+     *
      * @param appLogicController
      */
     public void setAppLogicController(AppLogicController appLogicController) {
@@ -438,8 +442,6 @@ public class JfxGuiController {
     public void clickUnit() {
         setInfo("Not implemented yet.");
     }
-
-
 
     void setLatitude(double latitude) {
         df_coord_dir.setRoundingMode(RoundingMode.CEILING);

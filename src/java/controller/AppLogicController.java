@@ -15,6 +15,8 @@ import javafx.scene.shape.Shape;
 import javafx.util.Pair;
 import maps.*;
 import network.NetworkDuplexClient;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -27,7 +29,7 @@ public class AppLogicController {
     private Channel channel;
     private BaseMap baseMap;
     private Map<MapPoint, ChannelHandlerContext> targetChannelMap = new HashMap<>();
-    private Map<MapPoint, MapPoint> targetWeaponMap = new HashMap<>();
+    private MultiValuedMap<MapPoint, MapPoint> targetWeaponMap = new ArrayListValuedHashMap<>();
     private static AtomicLong ID = new AtomicLong(1);
 
     public AppLogicController(BaseMap baseMap, PoiLayersData poiLayersData) {
@@ -76,9 +78,16 @@ public class AppLogicController {
                     client.pushCommandPointByChannel(point, targetChannelMap.get(point));
                     break;
                 }
-                Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
-                        l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).findFirst();
-                lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
+                poiLayersData.getLinesLayer().getLines().stream().filter(l ->
+                        l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).forEach(l -> {
+                    ((Line) l.getValue()).setStroke(Color.ORANGE);
+                });
+                poiLayersData.getTargetPointsLayer().getPoints().stream().filter(p ->
+                        p.getKey().getLatitude() == point.getLatitude() & p.getKey().getLongitude() == point.getLongitude()).findFirst()
+                        .ifPresent(mapPointNodePair -> {
+                            mapPointNodePair.getKey().setCommand(MapPoint.Commands.FIRE);
+                            guiController.setButtonText("FIRE!");
+                        });
                 // Next, push here the command directly to the cannoneer from your department... somehow.
                 break;
             }
@@ -139,12 +148,10 @@ public class AppLogicController {
                 break;
             }
             case FIRE: {
-//                Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo =
                 poiLayersData.getLinesLayer().getLines().stream().filter(l ->
                         l.getKey().getValue().getLatitude() == point.getLatitude() & l.getKey().getValue().getLongitude() == point.getLongitude()).forEach(l -> {
                     ((Line) l.getValue()).setStroke(Color.ORANGE);
                 });
-//                lo.ifPresent(pairNodePair -> ((Line) pairNodePair.getValue()).setStroke(Color.ORANGE));
                 if (!usedAsHQ) {
                     client.pushCommandPointByChannel(point, client.getChannel());
                 } else {
@@ -238,35 +245,39 @@ public class AppLogicController {
                 MapPoint selected = pair.getKey();
                 ((Shape) pair.getValue()).setFill(Color.TRANSPARENT);
                 pair.getValue().setVisible(false);
+                List<Pair<Pair<MapPoint, MapPoint>, Node>> toRemove = new ArrayList<>(1);
                 Optional<Pair<MapPoint, Node>> ot = poiLayersData.getTargetPointsLayer().getPoints().stream().filter(p ->
                         p.getKey().getLatitude() == selected.getLatitude() & p.getKey().getLongitude() == selected.getLongitude()).findFirst();
-                if (ot.isPresent()) { // target point was selected
+                if (ot.isPresent()) { // target point was selected, so delete its corresponding data
                     if (targetWeaponMap.containsKey(selected)) {
-                        Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
-                                l.getKey().getValue().getLatitude() == selected.getLatitude() & l.getKey().getValue().getLongitude() == selected.getLongitude()).findFirst();
-                        if (lo.isPresent()) { // delete line pointer if it was
-                            poiLayersData.getWeaponsAdjustmentsMap().get(lo.get().getKey().getKey()).clear();
-                            ((Line) lo.get().getValue()).setStroke(Color.TRANSPARENT);
-                            pair.getValue().setVisible(false);
-                            poiLayersData.getLinesLayer().getLines().remove(lo.get());
-                        }
-                        MapPoint w = targetWeaponMap.get(selected);
-                        w.setCommand(MapPoint.Commands.READY);
+                        poiLayersData.getLinesLayer().getLines().stream().filter(l -> l.getKey().getValue().getLatitude() == selected.getLatitude() & l.getKey().getValue().getLongitude() == selected.getLongitude())
+                                .forEach(lo -> {
+                                    poiLayersData.getWeaponsAdjustmentsMap().remove(lo.getKey().getKey());
+                                    ((Line) lo.getValue()).setStroke(Color.TRANSPARENT);
+                                    pair.getValue().setVisible(false);
+                                    toRemove.add(lo);
+                                });
+                        poiLayersData.getLinesLayer().getLines().remove(toRemove.get(0));
+                        toRemove.clear();
+                        targetWeaponMap.get(selected).forEach(w -> {
+                            w.setCommand(MapPoint.Commands.READY);
+                        });
                         targetWeaponMap.remove(selected);
                         guiController.setInfo("Target destroyed.");
                     }
                 }
                 Optional ow = poiLayersData.getWeaponPointsLayer().getPoints().stream().filter(p ->
                         p.getKey().getLatitude() == selected.getLatitude() & p.getKey().getLongitude() == selected.getLongitude()).findFirst();
-                if (ow.isPresent()) { // weapon point was selected
+                if (ow.isPresent()) { // weapon point was selected, so delete its corresponding data
                     Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo = poiLayersData.getLinesLayer().getLines().stream().filter(l ->
                             l.getKey().getKey().getLatitude() == selected.getLatitude() & l.getKey().getKey().getLongitude() == selected.getLongitude()).findFirst();
-                    if (lo.isPresent()) { // delete line pointer if it was
-                        poiLayersData.getWeaponsAdjustmentsMap().get(lo.get().getKey().getKey()).clear();
-                        ((Line) lo.get().getValue()).setStroke(Color.TRANSPARENT);
+                    lo.ifPresent(pairNodePair -> {// delete line pointer if it was
+                        poiLayersData.getWeaponsAdjustmentsMap().get(pairNodePair.getKey().getKey()).clear();
+                        ((Line) pairNodePair.getValue()).setStroke(Color.TRANSPARENT);
                         pair.getValue().setVisible(false);
-                        poiLayersData.getLinesLayer().getLines().remove(lo.get());
-                    }
+                        toRemove.add(pairNodePair);
+                    });
+                    poiLayersData.getLinesLayer().getLines().remove(toRemove.get(0));
                 }
                 ((PointsLayer) layer).getPoints().remove(pair);
             }
@@ -286,7 +297,6 @@ public class AppLogicController {
         poiLayersData.getWeaponsAdjustmentsMap().put(weapon, new ArrayList<>());
         calculateAiming(weapon, target);
         Platform.runLater(() -> {
-            System.out.println("Line added");
             poiLayersData.getLinesLayer().addLine(weapon, target, Color.BLACK);
         }); // Draw line between points
         displayMessage("Gun ready!");
@@ -298,41 +308,24 @@ public class AppLogicController {
     }
 
     void clearWeaponAiming(MapPoint weapon) {
-        System.out.println(weapon.toString());
         List<MapPoint> pn = new ArrayList<>(1);
         List<Pair<Pair<MapPoint, MapPoint>, Node>> ln = new ArrayList<>(1);
-        targetWeaponMap.forEach((t, w) -> {
-            System.out.println(t.toString() + " " + w.toString());
-            if (w.getLongitude() == weapon.getLongitude() & w.getLatitude() == weapon.getLatitude()) {
-                System.out.println("W = weap");
-                pn.add(t); // add target to remove list
-                t.setCommand(MapPoint.Commands.TARGET);
-//                Optional<Pair<Pair<MapPoint, MapPoint>, Node>> lo =
-                poiLayersData.getLinesLayer().getLines().stream().filter(l ->
-                        (l.getKey().getKey().getLatitude() == w.getLatitude() & l.getKey().getKey().getLongitude() == w.getLongitude())
-                                | (l.getKey().getValue().getLatitude() == w.getLatitude() & l.getKey().getValue().getLongitude() == w.getLongitude())).forEach(l -> {
-                    ln.add(l);
-                    poiLayersData.getWeaponsAdjustmentsMap().get(l.getKey().getKey()).clear();
+        poiLayersData.getLinesLayer().getLines().stream().filter(l ->
+                (l.getKey().getKey().getLatitude() == weapon.getLatitude() & l.getKey().getKey().getLongitude() == weapon.getLongitude())).findFirst().
+                ifPresent(l -> {
+                    ln.add(l); // add line to remove list
+                    poiLayersData.getWeaponsAdjustmentsMap().remove(l.getKey().getKey());
                     ((Line) l.getValue()).setStroke(Color.TRANSPARENT);
                     l.getValue().setVisible(false);
                 });
-//                if (lo.isPresent()) { // delete line pointer if it was
-//                    System.out.println("Line is present");
-//                    Pair<Pair<MapPoint, MapPoint>, Node> lm = lo.get();
-//                    ln.add(lm);// add line to remove list
-//                    poiLayersData.getWeaponsAdjustmentsMap().get(lm.getKey().getKey()).clear();
-//                    ((Line) lm.getValue()).setStroke(Color.TRANSPARENT);
-//                    lm.getValue().setVisible(false);
-//                    poiLayersData.getLinesLayer().getLines().remove(lo.get());
-//                }
-            }
+        targetWeaponMap.asMap().forEach((t, w) -> {
+            w.stream().filter(wp -> wp.getLongitude() == weapon.getLongitude() & wp.getLatitude() == weapon.getLatitude()).forEach(wp -> {
+                pn.add(t); // add target to remove list
+                t.setCommand(MapPoint.Commands.TARGET);
+            });
         });
-        if (pn.size() > 0) {
-            targetWeaponMap.remove(pn.get(0)); //remove KV pair
-        } else System.out.println("T W is NOT present");
-        if (ln.size() > 0) {
-            poiLayersData.getLinesLayer().getLines().remove(ln.get(0));
-        } else System.out.println("Line is NOT present");
+        if (pn.size() > 0) targetWeaponMap.remove(pn.get(0));
+        if (ln.size() > 0) poiLayersData.getLinesLayer().getLines().remove(ln.get(0));
     }
 
     private void createTargetPointOnMap(MapPoint point) {
@@ -362,7 +355,7 @@ public class AppLogicController {
                 }
             }
         });
-        if (!dis.isEmpty() && dis.getFirst() <= 300000) { // 300 km //TODO
+        if (!dis.isEmpty() && dis.getFirst() <= 300000) { // 300 km //TODO 30 km
             return wp.getFirst();
         } else {
             MapPoint p = new MapPoint(0, 0);
@@ -424,11 +417,11 @@ public class AppLogicController {
     private void calculateAdjustments(MapPoint adjustment) {
         Optional<Pair<MapPoint, Node>> ot = poiLayersData.getTargetPointsLayer().getPoints().stream().filter(p ->
                 p.getKey().getId() == adjustment.getId()).findFirst();
-        if (ot.isPresent()) {
+        ot.ifPresent(mapPointNodePair -> {
+            MapPoint point = mapPointNodePair.getKey();
             try {
                 Point2D adjust2d = baseMap.getMapPointFromDegreesToXY(adjustment.getLatitude(), adjustment.getLongitude());
-                Point2D target2d = baseMap.getMapPointFromDegreesToXY(ot.get().getKey().getLatitude(), ot.get().getKey().getLongitude());
-                MapPoint weaponToAdjust = targetWeaponMap.get(ot.get().getKey());
+                Point2D target2d = baseMap.getMapPointFromDegreesToXY(mapPointNodePair.getKey().getLatitude(), mapPointNodePair.getKey().getLongitude());
                 double deltaX = Math.abs(target2d.getX() - adjust2d.getX());
                 double deltaY = Math.abs(target2d.getY() - adjust2d.getY());
                 boolean right = false, up = false;
@@ -445,11 +438,17 @@ public class AppLogicController {
                     adj = baseMap.getMapPointFromXYtoDegrees(target2d.getX() + deltaX, target2d.getY() + deltaY);
                 }
                 adj.setCommand(MapPoint.Commands.ADJUSTMENT);
-                calculateAiming(weaponToAdjust, adj);
+                targetWeaponMap.asMap().forEach((t, w) -> {
+                    if (t == point) {
+                        w.forEach(wpn -> {
+                            calculateAiming(wpn, adj);
+                        });
+                    }
+                });
             } catch (NullPointerException e) {
                 // maybe weapon was deleted
             }
-        }
+        });
     }
 
     void selectToDownload() {
